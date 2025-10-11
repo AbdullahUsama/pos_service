@@ -21,7 +21,6 @@ export function SignUpForm({
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -40,49 +39,15 @@ export function SignUpForm({
       return;
     }
 
-    if (username.length < 3) {
-      setError("Username must be at least 3 characters long");
-      setIsLoading(false);
-      return;
-    }
-
-    if (!email || !email.includes('@')) {
-      setError("Please enter a valid email address");
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      // Use server-side API for user creation to handle RLS properly
-      const response = await fetch('/api/create-user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/protected`,
         },
-        body: JSON.stringify({
-          email,
-          password,
-          username,
-        }),
       });
-      
-      let result;
-      const contentType = response.headers.get('content-type');
-      
-      if (contentType && contentType.includes('application/json')) {
-        result = await response.json();
-      } else {
-        // If we get HTML instead of JSON, there's a server error
-        const htmlText = await response.text();
-        console.error('Server returned HTML instead of JSON:', htmlText);
-        throw new Error('Server configuration error. Please check your environment variables.');
-      }
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to create account');
-      }
-      
-      // Success - redirect to success page
+      if (error) throw error;
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
@@ -95,8 +60,8 @@ export function SignUpForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription>Join the Khappa POS system</CardDescription>
+          <CardTitle className="text-2xl">Sign up</CardTitle>
+          <CardDescription>Create a new account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
@@ -106,21 +71,10 @@ export function SignUpForm({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="your@email.com"
+                  placeholder="m@example.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">

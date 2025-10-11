@@ -18,7 +18,7 @@ interface InventoryInterfaceProps {
 export default function InventoryInterface({ userEmail }: InventoryInterfaceProps) {
   const [items, setItems] = useState<Item[]>([]);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
-  const [newItem, setNewItem] = useState({ name: '', price: '' });
+  const [newItem, setNewItem] = useState({ name: '', price: '', quantity: '' });
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -47,16 +47,23 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
     setIsLoading(true);
     
     try {
+      const itemData: any = {
+        name: newItem.name,
+        price: parseFloat(newItem.price)
+      };
+      
+      // Only add quantity if user provided a value
+      if (newItem.quantity && newItem.quantity.trim() !== '') {
+        itemData.quantity = parseInt(newItem.quantity);
+      }
+      
       const { error } = await supabase
         .from('items')
-        .insert({
-          name: newItem.name,
-          price: parseFloat(newItem.price)
-        });
+        .insert(itemData);
       
       if (error) throw error;
       
-      setNewItem({ name: '', price: '' });
+      setNewItem({ name: '', price: '', quantity: '' });
       setIsAddingItem(false);
       fetchItems();
     } catch (error) {
@@ -72,12 +79,21 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
     setIsLoading(true);
     
     try {
+      const updateData: any = {
+        name: editingItem.name,
+        price: editingItem.price
+      };
+      
+      // Handle quantity - if it's undefined, null, or empty string, set it to null in database
+      if (editingItem.quantity === undefined || editingItem.quantity === null || editingItem.quantity === 0) {
+        updateData.quantity = null;
+      } else {
+        updateData.quantity = editingItem.quantity;
+      }
+      
       const { error } = await supabase
         .from('items')
-        .update({
-          name: editingItem.name,
-          price: editingItem.price
-        })
+        .update(updateData)
         .eq('id', editingItem.id);
       
       if (error) throw error;
@@ -156,7 +172,7 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
             {isAddingItem && (
               <div className="mb-4 lg:mb-6 p-4 lg:p-6 bg-gray-700 rounded-lg border border-gray-600">
                 <h3 className="text-lg font-semibold mb-4 text-white">Add New Item</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div>
                     <Label htmlFor="new-name" className="text-gray-300 text-sm font-medium mb-2 block">Item Name</Label>
                     <Input
@@ -180,13 +196,27 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                       className="bg-gray-600 border-gray-500 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400"
                     />
                   </div>
+                  <div>
+                    <Label htmlFor="new-quantity" className="text-gray-300 text-sm font-medium mb-2 block">
+                      Total Quantity <span className="text-gray-500">(optional)</span>
+                    </Label>
+                    <Input
+                      id="new-quantity"
+                      type="number"
+                      min="0"
+                      value={newItem.quantity}
+                      onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
+                      placeholder="Leave empty if unlimited"
+                      className="bg-gray-600 border-gray-500 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400"
+                    />
+                  </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
                   <Button
                     variant="outline"
                     onClick={() => {
                       setIsAddingItem(false);
-                      setNewItem({ name: '', price: '' });
+                      setNewItem({ name: '', price: '', quantity: '' });
                     }}
                     className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 px-6 py-2 order-2 sm:order-1"
                   >
@@ -242,6 +272,19 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                               placeholder="0.00"
                             />
                           </div>
+                          <div>
+                            <Label className="text-gray-300 text-sm font-medium mb-2 block">
+                              Total Quantity <span className="text-gray-500">(optional)</span>
+                            </Label>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={editingItem.quantity || ''}
+                              onChange={(e) => setEditingItem({ ...editingItem, quantity: e.target.value ? parseInt(e.target.value) : undefined })}
+                              className="bg-gray-600 border-gray-500 text-white focus:border-blue-400 focus:ring-blue-400"
+                              placeholder="Leave empty if unlimited"
+                            />
+                          </div>
                           <div className="flex flex-col sm:flex-row gap-3 pt-2">
                             <Button 
                               size="sm" 
@@ -269,7 +312,14 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-white text-base truncate">{item.name}</h4>
-                            <p className="text-sm text-gray-300 mt-1">{formatCurrency(item.price)}</p>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
+                              <p className="text-sm text-gray-300">{formatCurrency(item.price)}</p>
+                              {item.quantity !== null && item.quantity !== undefined && (
+                                <span className="text-xs bg-blue-600 text-blue-100 px-2 py-1 rounded-full w-fit">
+                                  Stock: {item.quantity}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div className="flex gap-2 shrink-0">
                             <Button

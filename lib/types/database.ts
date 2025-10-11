@@ -6,18 +6,21 @@ export interface Database {
           id: string;
           name: string;
           price: number;
+          quantity?: number;
           created_at?: string;
         };
         Insert: {
           id?: string;
           name: string;
           price: number;
+          quantity?: number;
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
           price?: number;
+          quantity?: number;
           created_at?: string;
         };
       };
@@ -82,6 +85,7 @@ export interface Item {
   id: string;
   name: string;
   price: number;
+  quantity?: number;
   created_at?: string;
 }
 

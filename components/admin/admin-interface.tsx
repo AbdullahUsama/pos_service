@@ -5,7 +5,9 @@ import { createClient } from '@/lib/supabase/client';
 import { formatCurrency } from '@/lib/utils/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, Package, BarChart3, Users, DollarSign } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { LogOut, Package, BarChart3, Users, DollarSign, Plus, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface AdminInterfaceProps {
@@ -19,6 +21,14 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
     todaySales: 0,
     totalCashiers: 0
   });
+  const [showAddUserForm, setShowAddUserForm] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const router = useRouter();
   const supabase = createClient();
 
@@ -71,6 +81,45 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
     router.push('/auth/login');
   };
 
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setMessage('');
+    setError('');
+
+    try {
+      const response = await fetch('/api/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          role: 'cashier'
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage(`✅ Cashier created successfully! Email: ${data.user.email}`);
+        setFormData({ email: '', password: '' });
+        setShowAddUserForm(false);
+        fetchStats(); // Refresh stats to update cashier count
+        
+        // Clear message after 3 seconds
+        setTimeout(() => setMessage(''), 3000);
+      } else {
+        setError(data.error || 'Failed to create user');
+      }
+    } catch (err) {
+      setError('Network error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const navigateToInventory = () => {
     router.push('/admin/inventory');
   };
@@ -89,18 +138,103 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
             <p className="text-xs lg:text-sm text-gray-300">University Snack Shop Management</p>
             <p className="text-xs text-gray-400">Logged in as: {userEmail}</p>
           </div>
-          <Button
-            variant="outline"
-            onClick={handleLogout}
-            className="flex items-center gap-2 bg-gray-700 text-white border-gray-600 hover:bg-gray-600 self-start sm:self-auto"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Logout</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setShowAddUserForm(!showAddUserForm)}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Cashier
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleLogout}
+              className="flex items-center gap-2 bg-gray-700 text-white border-gray-600 hover:bg-gray-600 self-start sm:self-auto"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </Button>
+          </div>
         </div>
       </header>
 
       <div className="p-3 lg:p-6">
+        {/* Add User Form */}
+        {showAddUserForm && (
+          <Card className="bg-gray-800 border-gray-700 mb-6">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-white">Add New Cashier</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAddUserForm(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleAddUser} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="email" className="text-gray-300">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="bg-gray-700 border-gray-600 text-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="password" className="text-gray-300">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="bg-gray-700 border-gray-600 text-white"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
+                  >
+                    {isLoading ? 'Creating...' : 'Create Cashier'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowAddUserForm(false)}
+                    className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Success/Error Messages */}
+        {message && (
+          <div className="mb-4 p-3 bg-green-800 text-green-200 rounded-lg text-sm">
+            {message}
+          </div>
+        )}
+        
+        {error && (
+          <div className="mb-4 p-3 bg-red-800 text-red-200 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
           <Card className="bg-gray-800 border-gray-700">

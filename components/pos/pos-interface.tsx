@@ -40,6 +40,7 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
     if (error) {
       console.error('Error fetching items:', error);
     } else {
+      console.log('Fetched items:', data);
       setItems(data || []);
     }
   };
@@ -73,6 +74,18 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
   const addToCart = (item: Item) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
+      const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
+      const newQuantityInCart = currentQuantityInCart + 1;
+      
+      // Check if item has quantity tracking and if we would exceed available stock
+      if (item.quantity !== null && item.quantity !== undefined) {
+        if (newQuantityInCart > item.quantity) {
+          // Don't add to cart if it would exceed available stock
+          console.log(`Cannot add more ${item.name}. Only ${item.quantity} available.`);
+          return prevCart;
+        }
+      }
+      
       if (existingItem) {
         return prevCart.map(cartItem =>
           cartItem.id === item.id
@@ -92,9 +105,24 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
     }
     
     setCart(prevCart =>
-      prevCart.map(item =>
-        item.id === itemId ? { ...item, quantity } : item
-      )
+      prevCart.map(cartItem => {
+        if (cartItem.id === itemId) {
+          // Find the original item to check quantity limits
+          const originalItem = items.find(item => item.id === itemId);
+          
+          // Check if item has quantity tracking and if new quantity would exceed available stock
+          if (originalItem?.quantity !== null && originalItem?.quantity !== undefined) {
+            if (quantity > originalItem.quantity) {
+              // Don't allow quantity to exceed available stock
+              console.log(`Cannot set quantity to ${quantity}. Only ${originalItem.quantity} available.`);
+              return cartItem; // Return unchanged
+            }
+          }
+          
+          return { ...cartItem, quantity };
+        }
+        return cartItem;
+      })
     );
   };
 
@@ -112,7 +140,29 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase
+      // First, validate that all items with quantity tracking have enough stock
+      for (const cartItem of cart) {
+        const { data: itemData, error: itemError } = await supabase
+          .from('items')
+          .select('quantity, name')
+          .eq('id', cartItem.id)
+          .single();
+        
+        if (itemError) {
+          console.error('Error validating item stock:', itemError);
+          throw new Error(`Could not validate stock for ${cartItem.name}`);
+        }
+        
+        // Check if item has quantity tracking and sufficient stock
+        if (itemData?.quantity !== null && itemData?.quantity !== undefined) {
+          if (itemData.quantity < cartItem.quantity) {
+            throw new Error(`Insufficient stock for ${itemData.name}. Available: ${itemData.quantity}, Requested: ${cartItem.quantity}`);
+          }
+        }
+      }
+      
+      // Record the sale
+      const { error: salesError } = await supabase
         .from('sales')
         .insert({
           cashier_id: userId,
@@ -121,15 +171,75 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
           cart_details: cart
         });
       
-      if (error) throw error;
+      if (salesError) throw salesError;
+      
+      // Update inventory quantities for items that have quantity tracking
+      for (const cartItem of cart) {
+        console.log(`Processing item: ${cartItem.name}, quantity in cart: ${cartItem.quantity}`);
+        
+        // Get current item data to check if it has quantity tracking
+        const { data: itemData, error: itemError } = await supabase
+          .from('items')
+          .select('quantity')
+          .eq('id', cartItem.id)
+          .single();
+        
+        if (itemError) {
+          console.error('Error fetching item for quantity update:', itemError);
+          continue; // Continue with other items even if one fails
+        }
+        
+        console.log(`Current quantity in DB: ${itemData?.quantity}`);
+        
+        // Only update if item has quantity tracking (not null)
+        if (itemData?.quantity !== null && itemData?.quantity !== undefined) {
+          const newQuantity = Math.max(0, itemData.quantity - cartItem.quantity);
+          console.log(`Updating quantity from ${itemData.quantity} to ${newQuantity}`);
+          
+          const { data: updateData, error: updateError } = await supabase
+            .from('items')
+            .update({ quantity: newQuantity })
+            .eq('id', cartItem.id)
+            .select(); // Add select to return updated data
+          
+          if (updateError) {
+            console.error('Error updating item quantity:', updateError);
+            console.error(`Failed to update quantity for ${cartItem.name}:`, updateError);
+          } else if (updateData && updateData.length > 0) {
+            console.log(`Successfully updated ${cartItem.name} quantity to ${newQuantity}. DB response:`, updateData[0]);
+          } else {
+            console.error(`Update appeared successful but no rows were affected for ${cartItem.name}`);
+            console.log('Update response:', updateData);
+          }
+          
+          // Verify the update by fetching the item again
+          const { data: verifyData, error: verifyError } = await supabase
+            .from('items')
+            .select('quantity')
+            .eq('id', cartItem.id)
+            .single();
+          
+          if (!verifyError && verifyData) {
+            console.log(`Verification: ${cartItem.name} quantity in DB is now: ${verifyData.quantity}`);
+          } else {
+            console.error('Error verifying update:', verifyError);
+          }
+        } else {
+          console.log(`Item ${cartItem.name} has no quantity tracking (unlimited stock)`);
+        }
+      }
       
       setCart([]);
       setSuccessMessage(`Sale Complete! Payment: ${paymentMethod}`);
       fetchTodaysStats(); // Refresh stats
+      fetchItems(); // Refresh items to get updated quantities
       
       setTimeout(() => setSuccessMessage(''), 1500);
     } catch (error) {
       console.error('Error processing sale:', error);
+      // Show error message to user
+      setSuccessMessage(`Error: ${error instanceof Error ? error.message : 'Sale failed'}`);
+      setTimeout(() => setSuccessMessage(''), 3000);
     } finally {
       setIsLoading(false);
     }
@@ -139,6 +249,42 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
     await supabase.auth.signOut();
     router.push('/auth/login');
   };
+
+  // Test function to manually test quantity updates
+  const testQuantityUpdate = async () => {
+    console.log('Testing quantity update...');
+    
+    if (items.length === 0) {
+      console.log('No items available for testing');
+      return;
+    }
+    
+    const testItem = items.find(item => item.quantity !== null && item.quantity !== undefined);
+    if (!testItem) {
+      console.log('No items with quantity tracking found for testing');
+      return;
+    }
+    
+    console.log(`Testing with item: ${testItem.name}, current quantity: ${testItem.quantity}`);
+    
+    const { data, error } = await supabase
+      .from('items')
+      .update({ quantity: testItem.quantity! - 1 })
+      .eq('id', testItem.id)
+      .select();
+    
+    if (error) {
+      console.error('Test update failed:', error);
+    } else {
+      console.log('Test update successful:', data);
+      fetchItems(); // Refresh to see the change
+    }
+  };
+
+  // Add this to window for easy testing (development only)
+  if (typeof window !== 'undefined') {
+    (window as any).testQuantityUpdate = testQuantityUpdate;
+  }
 
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-gray-900">
@@ -189,20 +335,46 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
-              {filteredItems.map((item) => (
-                <Card
-                  key={item.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow bg-gray-800 border-gray-700 hover:bg-gray-750"
-                  onClick={() => addToCart(item)}
-                >
-                  <CardContent className="p-3 lg:p-4">
-                    <h3 className="font-semibold text-sm lg:text-lg mb-1 lg:mb-2 text-white line-clamp-2">{item.name}</h3>
-                    <p className="text-lg lg:text-xl font-bold text-green-400">
-                      {formatCurrency(item.price)}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
+              {filteredItems.map((item) => {
+                const currentCartQuantity = cart.find(cartItem => cartItem.id === item.id)?.quantity || 0;
+                const isOutOfStock = item.quantity !== null && item.quantity !== undefined && 
+                  (item.quantity === 0 || currentCartQuantity >= item.quantity);
+                
+                return (
+                  <Card
+                    key={item.id}
+                    className={`cursor-pointer hover:shadow-md transition-shadow border-gray-700 ${
+                      isOutOfStock 
+                        ? 'bg-gray-800 opacity-50 cursor-not-allowed' 
+                        : 'bg-gray-800 hover:bg-gray-750'
+                    }`}
+                    onClick={() => !isOutOfStock && addToCart(item)}
+                  >
+                    <CardContent className="p-3 lg:p-4">
+                      <h3 className="font-semibold text-sm lg:text-lg mb-1 lg:mb-2 text-white line-clamp-2">{item.name}</h3>
+                      <p className="text-lg lg:text-xl font-bold text-green-400 mb-1">
+                        {formatCurrency(item.price)}
+                      </p>
+                      {item.quantity !== null && item.quantity !== undefined && (
+                        <div className="flex items-center justify-between">
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            item.quantity === 0 || currentCartQuantity >= item.quantity
+                              ? 'bg-red-600 text-red-100'
+                              : item.quantity <= 5
+                              ? 'bg-yellow-600 text-yellow-100'
+                              : 'bg-blue-600 text-blue-100'
+                          }`}>
+                            {isOutOfStock 
+                              ? 'Out of Stock' 
+                              : `Stock: ${item.quantity - currentCartQuantity}`
+                            }
+                          </span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
 
