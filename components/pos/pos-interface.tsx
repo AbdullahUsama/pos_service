@@ -127,7 +127,7 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
       setSuccessMessage(`Sale Complete! Payment: ${paymentMethod}`);
       fetchTodaysStats(); // Refresh stats
       
-      setTimeout(() => setSuccessMessage(''), 3000);
+      setTimeout(() => setSuccessMessage(''), 1500);
     } catch (error) {
       console.error('Error processing sale:', error);
     } finally {
@@ -259,6 +259,15 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
               )}
             </div>
 
+            {/* Success Message - Always visible when present */}
+            {successMessage && (
+              <div className="p-4 lg:p-6 border-t border-gray-700 bg-gray-750">
+                <div className="p-3 bg-green-800 text-green-200 rounded-lg text-center text-sm lg:text-base border border-green-700 animate-pulse">
+                  {successMessage}
+                </div>
+              </div>
+            )}
+
             {/* Checkout Section */}
             {cart.length > 0 && (
               <div className="p-4 lg:p-6 border-t border-gray-700 bg-gray-750">
@@ -288,12 +297,6 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
                     {isLoading ? 'Processing...' : 'Transfer Payment'}
                   </Button>
                 </div>
-
-                {successMessage && (
-                  <div className="mt-3 lg:mt-4 p-2 lg:p-3 bg-green-800 text-green-200 rounded-lg text-center text-sm lg:text-base border border-green-700">
-                    {successMessage}
-                  </div>
-                )}
               </div>
             )}
           </div>
