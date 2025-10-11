@@ -12,11 +12,10 @@ import { LogOut, Plus, Edit, Trash2, Save, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface AdminInterfaceProps {
-  userId: string;
   userEmail: string;
 }
 
-export default function AdminInterface({ userId, userEmail }: AdminInterfaceProps) {
+export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
   const [items, setItems] = useState<Item[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
@@ -45,7 +44,7 @@ export default function AdminInterface({ userId, userEmail }: AdminInterfaceProp
     return () => {
       salesSubscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
   const fetchItems = async () => {
     const { data, error } = await supabase

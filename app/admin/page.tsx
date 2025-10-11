@@ -17,7 +17,7 @@ export default async function AdminPage() {
   
   return (
     <div className="min-h-screen bg-gray-50">
-      <AdminInterface userId={user.id} userEmail={user.email || ''} />
+      <AdminInterface userEmail={user.email || ''} />
     </div>
   );
 }

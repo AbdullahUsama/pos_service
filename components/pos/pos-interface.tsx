@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Item, CartItem, Sale } from '@/lib/types/database';
+import { Item, CartItem } from '@/lib/types/database';
 import { formatCurrency } from '@/lib/utils/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { LogOut, Search, Plus, Minus, Trash2, ShoppingCart } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -30,7 +29,7 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
   useEffect(() => {
     fetchItems();
     fetchTodaysStats();
-  }, []);
+  }, [userId]);
 
   const fetchItems = async () => {
     const { data, error } = await supabase
@@ -154,7 +153,7 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
             </div>
             <div className="flex flex-wrap items-center gap-2 lg:gap-4">
               <div className="text-center sm:text-right">
-                <div className="text-xs lg:text-sm text-gray-300">Today's Sales</div>
+                <div className="text-xs lg:text-sm text-gray-300">Today&apos;s Sales</div>
                 <div className="text-sm lg:text-lg font-semibold text-green-400">{formatCurrency(todaysStats.totalSales)}</div>
               </div>
               <div className="text-center sm:text-right">

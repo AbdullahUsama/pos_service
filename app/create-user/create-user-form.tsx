@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 
 export default function CreateUserForm() {
@@ -41,7 +40,7 @@ export default function CreateUserForm() {
       } else {
         setError(data.error || 'Failed to create user');
       }
-    } catch (error) {
+    } catch (err) {
       setError('Network error occurred');
     } finally {
       setIsLoading(false);
