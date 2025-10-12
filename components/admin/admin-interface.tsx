@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency } from '@/lib/utils/auth';
+import { Note } from '@/lib/types/database';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LogOut, Package, BarChart3, Users, DollarSign, Plus, X } from 'lucide-react';
+import { LogOut, Package, BarChart3, Users, DollarSign, Plus, X, StickyNote, FileText, Trash2, Calendar, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface AdminInterfaceProps {
@@ -29,6 +30,12 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
   });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  
+  // Notes state
+  const [showNotesView, setShowNotesView] = useState(false);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+  
   const router = useRouter();
   const supabase = createClient();
 
@@ -126,6 +133,95 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
 
   const navigateToSalesReport = () => {
     router.push('/admin/sales');
+  };
+
+  // Notes functions
+  const fetchAllNotes = async () => {
+    setNotesLoading(true);
+    try {
+      // First, fetch all notes
+      const { data: notesData, error } = await supabase
+        .from('notes')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching notes:', error);
+        return;
+      }
+
+      if (notesData && notesData.length > 0) {
+        // Get unique cashier IDs
+        const uniqueCashierIds = [...new Set(notesData.map(note => note.cashier_id))];
+        
+        try {
+          // Fetch cashier emails using the existing API
+          const response = await fetch('/api/users', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userIds: uniqueCashierIds }),
+          });
+          
+          if (response.ok) {
+            const { userEmails } = await response.json();
+            
+            // Map notes with emails
+            const notesWithEmail = notesData.map(note => ({
+              ...note,
+              cashier_email: userEmails[note.cashier_id] || 'Unknown'
+            }));
+            
+            setNotes(notesWithEmail);
+          } else {
+            console.error('Failed to fetch user emails');
+            // Fallback: set notes without emails
+            const notesWithEmail = notesData.map(note => ({
+              ...note,
+              cashier_email: 'Unknown'
+            }));
+            setNotes(notesWithEmail);
+          }
+        } catch (emailError) {
+          console.error('Error fetching user emails:', emailError);
+          // Fallback: set notes without emails
+          const notesWithEmail = notesData.map(note => ({
+            ...note,
+            cashier_email: 'Unknown'
+          }));
+          setNotes(notesWithEmail);
+        }
+      } else {
+        setNotes([]);
+      }
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+    } finally {
+      setNotesLoading(false);
+    }
+  };
+
+  const handleViewNotes = () => {
+    setShowNotesView(true);
+    fetchAllNotes();
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -287,7 +383,7 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
         </div>
 
         {/* Main Action Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Inventory Management Card */}
           <Card 
             className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-colors cursor-pointer"
@@ -335,7 +431,108 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Notes Management Card */}
+          <Card 
+            className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-colors cursor-pointer"
+            onClick={handleViewNotes}
+          >
+            <CardHeader className="text-center">
+              <div className="mx-auto bg-purple-600 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                <StickyNote className="h-8 w-8 text-white" />
+              </div>
+              <CardTitle className="text-white text-xl lg:text-2xl">View Notes</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="text-gray-300 mb-4">
+                View all cashier shift notes and important information left by staff members.
+              </p>
+              <p className="text-sm text-gray-400 mb-6">
+                Monitor staff communications and shift updates
+              </p>
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                View All Notes
+              </Button>
+            </CardContent>
+          </Card>
         </div>
+        
+        {/* Notes Modal */}
+        {showNotesView && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] border border-gray-700 flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-700">
+                <h2 className="text-lg font-semibold text-white">All Cashier Notes</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowNotesView(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-4">
+                {notesLoading ? (
+                  <div className="text-center py-8">
+                    <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-gray-400">Loading notes...</p>
+                  </div>
+                ) : notes.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-400">No notes found</p>
+                    <p className="text-sm text-gray-500 mt-1">Cashiers haven't added any notes yet</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {notes.map((note) => (
+                      <div
+                        key={note.id}
+                        className="bg-gray-700 rounded-lg p-4 border border-gray-600"
+                      >
+                        {/* Note Header */}
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h3 className="font-medium text-white text-lg">{note.title}</h3>
+                            <p className="text-sm text-purple-400">by {note.cashier_email}</p>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-gray-400">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              <span>{formatDate(note.created_at)}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              <span>{formatTime(note.created_at)}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Note Content */}
+                        <div className="mt-3">
+                          <p className="text-gray-300 whitespace-pre-wrap">{note.content}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="flex justify-end p-4 border-t border-gray-700">
+                <Button
+                  onClick={() => setShowNotesView(false)}
+                  className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -7,7 +7,14 @@ import { formatCurrency, formatDate } from '@/lib/utils/auth';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, Filter } from 'lucide-react';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { ArrowLeft, Download, Filter, ChevronDown, X, Calendar, BarChart3 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface SalesReportInterfaceProps {
@@ -20,6 +27,13 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
   const [dateFilter, setDateFilter] = useState('all');
   const [cashierEmails, setCashierEmails] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  
+  // New filter states
+  const [selectedCashier, setSelectedCashier] = useState<string>('all');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [showFilters, setShowFilters] = useState<boolean>(false);
+  
   const router = useRouter();
   const supabase = createClient();
 
@@ -90,10 +104,32 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
     router.push('/admin');
   };
 
+  const handleViewAnalytics = () => {
+    router.push('/admin/analytics');
+  };
+
+  // Get unique cashiers for dropdown
+  const getUniqueCashiers = () => {
+    const uniqueCashiers = [...new Set(sales.map(sale => sale.cashier_id))];
+    return uniqueCashiers.map(cashierId => ({
+      id: cashierId,
+      email: cashierEmails[cashierId] || 'Unknown'
+    }));
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSalesFilter('');
+    setSelectedCashier('all');
+    setDateFilter('all');
+    setStartDate('');
+    setEndDate('');
+  };
+
   const getFilteredSales = () => {
     let filtered = sales;
 
-    // Apply text filter
+    // Apply text filter (general search)
     if (salesFilter) {
       filtered = filtered.filter(sale => {
         const cashierEmail = cashierEmails[sale.cashier_id] || '';
@@ -103,8 +139,21 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
       });
     }
 
-    // Apply date filter
-    if (dateFilter !== 'all') {
+    // Apply cashier filter
+    if (selectedCashier !== 'all') {
+      filtered = filtered.filter(sale => sale.cashier_id === selectedCashier);
+    }
+
+    // Apply date range filter (takes priority over time period filter)
+    if (startDate && endDate) {
+      const start = new Date(startDate + 'T00:00:00');
+      const end = new Date(endDate + 'T23:59:59');
+      filtered = filtered.filter(sale => {
+        const saleDate = new Date(sale.created_at);
+        return saleDate >= start && saleDate <= end;
+      });
+    } else if (dateFilter !== 'all') {
+      // Apply time period filter only if no date range is set
       const now = new Date();
       let startDate: Date;
 
@@ -151,19 +200,31 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
     <div className="min-h-screen bg-gray-900">
       {/* Header */}
       <header className="bg-gray-800 shadow-sm border-b border-gray-700 px-3 sm:px-4 lg:px-6 py-3 lg:py-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={handleBackToAdmin}
+              className="flex items-center justify-center gap-2 bg-gray-700 text-white border-gray-600 hover:bg-gray-600 w-full sm:w-auto text-sm"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Dashboard</span>
+            </Button>
+            <div className="text-center sm:text-left">
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Sales Reports</h1>
+              <p className="text-xs text-gray-400">Logged in as: {userEmail}</p>
+            </div>
+          </div>
+          
           <Button
             variant="outline"
-            onClick={handleBackToAdmin}
-            className="flex items-center justify-center gap-2 bg-gray-700 text-white border-gray-600 hover:bg-gray-600 w-full sm:w-auto text-sm"
+            onClick={handleViewAnalytics}
+            className="bg-blue-700 border-blue-600 text-white hover:bg-blue-600 px-4 py-2 text-sm"
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to Dashboard</span>
+            <BarChart3 className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">View Analytics</span>
+            <span className="sm:hidden">Analytics</span>
           </Button>
-          <div className="text-center sm:text-left">
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Sales Reports</h1>
-            <p className="text-xs text-gray-400">Logged in as: {userEmail}</p>
-          </div>
         </div>
       </header>
 
@@ -223,48 +284,144 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
         {/* Filters */}
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="pb-3">
-            <CardTitle className="text-white flex items-center gap-2 text-lg">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-3 md:gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-300 block mb-2">Search</label>
-                <Input
-                  placeholder="Filter by cashier or payment method..."
-                  value={salesFilter}
-                  onChange={(e) => setSalesFilter(e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400"
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className="w-full flex items-center justify-between text-left"
+            >
+              <div className="flex items-center gap-2">
+                <Filter className="h-5 w-5 text-white" />
+                <CardTitle className="text-white text-lg">Filters</CardTitle>
+              </div>
+              <div className="flex items-center gap-2">
+                {(salesFilter || selectedCashier !== 'all' || dateFilter !== 'all' || startDate || endDate) && (
+                  <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full">
+                    Active
+                  </span>
+                )}
+                <ChevronDown 
+                  className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${
+                    showFilters ? 'rotate-180' : ''
+                  }`} 
                 />
               </div>
-              <div>
-                <label className="text-sm font-medium text-gray-300 block mb-2">Time Period</label>
-                <select
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:border-blue-400 focus:ring-blue-400 focus:outline-none"
-                >
-                  <option value="all">All Time</option>
-                  <option value="today">Today</option>
-                  <option value="week">Past Week</option>
-                  <option value="month">This Month</option>
-                </select>
+            </button>
+          </CardHeader>
+          
+          {showFilters && (
+            <CardContent className="border-t border-gray-700 pt-4">
+              <div className="space-y-4">
+                {/* First row - Search and Cashier Name */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-300 block mb-2">General Search</label>
+                    <Input
+                      placeholder="Search by payment method, etc..."
+                      value={salesFilter}
+                      onChange={(e) => setSalesFilter(e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-300 block mb-2">Cashier Name</label>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full bg-gray-700 border-gray-600 text-white hover:bg-gray-600 justify-between"
+                        >
+                          <span className="truncate">
+                            {selectedCashier === 'all' 
+                              ? 'All Cashiers' 
+                              : cashierEmails[selectedCashier] || 'Unknown'
+                            }
+                          </span>
+                          <ChevronDown className="h-4 w-4 opacity-50" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-full bg-gray-800 border-gray-700">
+                        <DropdownMenuItem 
+                          onClick={() => setSelectedCashier('all')}
+                          className="text-white hover:bg-gray-700 cursor-pointer"
+                        >
+                          All Cashiers
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-gray-600" />
+                        {getUniqueCashiers().map((cashier) => (
+                          <DropdownMenuItem 
+                            key={cashier.id}
+                            onClick={() => setSelectedCashier(cashier.id)}
+                            className="text-white hover:bg-gray-700 cursor-pointer"
+                          >
+                            {cashier.email}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+
+                {/* Second row - Time Period and Date Range */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-300 block mb-2">Time Period</label>
+                    <select
+                      value={dateFilter}
+                      onChange={(e) => setDateFilter(e.target.value)}
+                      className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:border-blue-400 focus:ring-blue-400 focus:outline-none"
+                    >
+                      <option value="all">All Time</option>
+                      <option value="today">Today</option>
+                      <option value="week">Past Week</option>
+                      <option value="month">This Month</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-300 block mb-2">Start Date</label>
+                    <Input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white focus:border-blue-400 focus:ring-blue-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-300 block mb-2">End Date</label>
+                    <Input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white focus:border-blue-400 focus:ring-blue-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Third row - Action buttons */}
+                <div className="flex justify-between items-center pt-2 border-t border-gray-700">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Clear All
+                  </Button>
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600 px-4 py-2"
+                      disabled={filteredSales.length === 0}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Export Data</span>
+                      <span className="sm:hidden">Export</span>
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-end">
-                <Button
-                  variant="outline"
-                  className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600 w-full md:w-auto px-4 py-2"
-                  disabled={filteredSales.length === 0}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">Export Data</span>
-                  <span className="sm:hidden">Export</span>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
+            </CardContent>
+          )}
         </Card>
 
         {/* Sales Table */}

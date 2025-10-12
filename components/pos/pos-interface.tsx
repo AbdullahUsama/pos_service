@@ -2,13 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Item, CartItem } from '@/lib/types/database';
+import { Item, CartItem, Note } from '@/lib/types/database';
 import { formatCurrency } from '@/lib/utils/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { LogOut, Search, Plus, Minus, Trash2, ShoppingCart } from 'lucide-react';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { LogOut, Search, Plus, Minus, Trash2, ShoppingCart, StickyNote, FileText, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import AddNotePopup from './add-note-popup';
+import PreviousNotesPopup from './previous-notes-popup';
 
 interface POSInterfaceProps {
   userId: string;
@@ -22,6 +30,13 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [todaysStats, setTodaysStats] = useState({ totalSales: 0, itemsSold: 0 });
+  
+  // Notes state
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [showAddNote, setShowAddNote] = useState(false);
+  const [showPreviousNotes, setShowPreviousNotes] = useState(false);
+  const [notesLoading, setNotesLoading] = useState(false);
+  
   const router = useRouter();
   const supabase = createClient();
 
@@ -250,6 +265,82 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
     router.push('/auth/login');
   };
 
+  // Notes functions
+  const fetchNotes = async () => {
+    setNotesLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('cashier_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching notes:', error);
+      } else {
+        setNotes(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+    } finally {
+      setNotesLoading(false);
+    }
+  };
+
+  const handleAddNote = async (title: string, content: string) => {
+    setNotesLoading(true);
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .insert({
+          cashier_id: userId,
+          title,
+          content
+        });
+      
+      if (error) {
+        console.error('Error adding note:', error);
+        throw error;
+      }
+      
+      setShowAddNote(false);
+      fetchNotes(); // Refresh notes list
+    } catch (error) {
+      console.error('Error saving note:', error);
+      throw error;
+    } finally {
+      setNotesLoading(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', noteId);
+      
+      if (error) {
+        console.error('Error deleting note:', error);
+        throw error;
+      }
+      
+      fetchNotes(); // Refresh notes list
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      throw error;
+    }
+  };
+
+  const handleNotesDropdown = (action: 'add' | 'previous') => {
+    if (action === 'add') {
+      setShowAddNote(true);
+    } else {
+      fetchNotes();
+      setShowPreviousNotes(true);
+    }
+  };
+
   // Test function to manually test quantity updates
   const testQuantityUpdate = async () => {
     console.log('Testing quantity update...');
@@ -306,6 +397,33 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
                 <div className="text-xs lg:text-sm text-gray-300">Items Sold</div>
                 <div className="text-sm lg:text-lg font-semibold text-blue-400">{todaysStats.itemsSold}</div>
               </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 bg-gray-700 text-white border-gray-600 hover:bg-gray-600 text-xs lg:text-sm px-2 lg:px-4"
+                  >
+                    <StickyNote className="h-3 w-3 lg:h-4 lg:w-4" />
+                    <span className="hidden sm:inline">Notes</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-gray-800 border-gray-700">
+                  <DropdownMenuItem 
+                    onClick={() => handleNotesDropdown('add')}
+                    className="text-white hover:bg-gray-700 cursor-pointer"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Add Note
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleNotesDropdown('previous')}
+                    className="text-white hover:bg-gray-700 cursor-pointer"
+                  >
+                    <Clock className="h-4 w-4 mr-2" />
+                    Previous Notes
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 variant="outline"
                 onClick={handleLogout}
@@ -474,6 +592,22 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
           </div>
         </div>
       </div>
+      
+      {/* Notes Popups */}
+      <AddNotePopup
+        isOpen={showAddNote}
+        onClose={() => setShowAddNote(false)}
+        onSave={handleAddNote}
+        isLoading={notesLoading}
+      />
+      
+      <PreviousNotesPopup
+        isOpen={showPreviousNotes}
+        onClose={() => setShowPreviousNotes(false)}
+        notes={notes}
+        onDelete={handleDeleteNote}
+        isLoading={notesLoading}
+      />
     </div>
   );
 }

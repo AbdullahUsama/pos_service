@@ -70,6 +70,32 @@ export interface Database {
           created_at?: string;
         };
       };
+      notes: {
+        Row: {
+          id: string;
+          cashier_id: string;
+          title: string;
+          content: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          cashier_id: string;
+          title: string;
+          content: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          cashier_id?: string;
+          title?: string;
+          content?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 }
@@ -104,6 +130,16 @@ export interface Profile {
   role: 'admin' | 'cashier';
   username?: string;
   created_at?: string;
+}
+
+export interface Note {
+  id: string;
+  cashier_id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  cashier_email?: string; // Optional field for admin views
 }
 
 export type UserRole = 'admin' | 'cashier';
