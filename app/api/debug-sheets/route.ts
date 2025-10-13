@@ -10,6 +10,7 @@ interface TestResult {
 interface DebugInfo {
   timestamp: string;
   environment: string;
+  allEnvKeys: string[]; // Add this line
   googleSheetsConfig: {
     hasPrivateKey: boolean;
     hasClientEmail: boolean;
@@ -35,9 +36,19 @@ interface DebugInfo {
 }
 
 export async function GET(request: NextRequest) {
+  // Log all environment variables that start with GOOGLE or NEXT
+  console.log('🔍 All ENV vars starting with GOOGLE_:', 
+    Object.keys(process.env).filter(key => key.startsWith('GOOGLE_'))
+  );
+  console.log('🔍 All ENV vars starting with NEXT_:', 
+    Object.keys(process.env).filter(key => key.startsWith('NEXT_'))
+  );
+  console.log('🔍 All ENV vars:', Object.keys(process.env));
+
   const debug: DebugInfo = {
     timestamp: new Date().toISOString(),
     environment: 'production',
+    allEnvKeys: Object.keys(process.env), // Add this to see all available env vars
     googleSheetsConfig: {
       hasPrivateKey: !!process.env.GOOGLE_SHEETS_PRIVATE_KEY,
       hasClientEmail: !!process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
