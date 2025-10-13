@@ -40,6 +40,53 @@ interface AnalyticsInterfaceProps {
   userEmail: string;
 }
 
+// Hook to get theme colors
+const useThemeColors = () => {
+  const [colors, setColors] = useState({
+    foreground: '#000000',
+    mutedForeground: '#6b7280',
+    popover: '#ffffff',
+    popoverForeground: '#000000',
+    border: '#e5e7eb',
+  });
+
+  useEffect(() => {
+    const updateColors = () => {
+      const root = document.documentElement;
+      const computedStyle = getComputedStyle(root);
+      
+      setColors({
+        foreground: `hsl(${computedStyle.getPropertyValue('--foreground')})`,
+        mutedForeground: `hsl(${computedStyle.getPropertyValue('--muted-foreground')})`,
+        popover: `hsl(${computedStyle.getPropertyValue('--popover')})`,
+        popoverForeground: `hsl(${computedStyle.getPropertyValue('--popover-foreground')})`,
+        border: `hsl(${computedStyle.getPropertyValue('--border')})`,
+      });
+    };
+
+    // Update colors on mount
+    updateColors();
+
+    // Listen for theme changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          updateColors();
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  return colors;
+};
+
 export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProps) {
   const [sales, setSales] = useState<Sale[]>([]);
   const [items, setItems] = useState<Item[]>([]);
@@ -49,6 +96,7 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
   const [chartKey, setChartKey] = useState(0); // Force chart re-render
   const router = useRouter();
   const supabase = createClient();
+  const themeColors = useThemeColors();
 
   useEffect(() => {
     fetchData();
@@ -444,7 +492,7 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
     plugins: {
       legend: {
         labels: {
-          color: 'white',
+          color: themeColors.foreground,
           font: {
             size: 12,
           },
@@ -452,29 +500,29 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
         position: 'top' as const,
       },
       tooltip: {
-        backgroundColor: 'rgba(17, 24, 39, 0.9)',
-        titleColor: 'white',
-        bodyColor: 'white',
-        borderColor: 'rgba(75, 85, 99, 1)',
+        backgroundColor: themeColors.popover,
+        titleColor: themeColors.popoverForeground,
+        bodyColor: themeColors.popoverForeground,
+        borderColor: themeColors.border,
         borderWidth: 1,
       },
     },
     scales: {
       x: {
         ticks: {
-          color: 'rgba(156, 163, 175, 1)',
+          color: themeColors.mutedForeground,
           font: {
             size: 10,
           },
           maxRotation: 45,
         },
         grid: {
-          color: 'rgba(55, 65, 81, 0.3)',
+          color: themeColors.border,
         },
       },
       y: {
         ticks: {
-          color: 'rgba(156, 163, 175, 1)',
+          color: themeColors.mutedForeground,
           font: {
             size: 10,
           },
@@ -486,7 +534,7 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
           },
         },
         grid: {
-          color: 'rgba(55, 65, 81, 0.3)',
+          color: themeColors.border,
         },
       },
     },
@@ -498,7 +546,7 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
     plugins: {
       legend: {
         labels: {
-          color: 'white',
+          color: themeColors.foreground,
           font: {
             size: 12,
           },
@@ -506,36 +554,36 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
         position: 'top' as const,
       },
       tooltip: {
-        backgroundColor: 'rgba(17, 24, 39, 0.9)',
-        titleColor: 'white',
-        bodyColor: 'white',
-        borderColor: 'rgba(75, 85, 99, 1)',
+        backgroundColor: themeColors.popover,
+        titleColor: themeColors.popoverForeground,
+        bodyColor: themeColors.popoverForeground,
+        borderColor: themeColors.border,
         borderWidth: 1,
       },
     },
     scales: {
       x: {
         ticks: {
-          color: 'rgba(156, 163, 175, 1)',
+          color: themeColors.mutedForeground,
           font: {
             size: 10,
           },
           maxRotation: 45,
         },
         grid: {
-          color: 'rgba(55, 65, 81, 0.3)',
+          color: themeColors.border,
         },
       },
       y: {
         ticks: {
-          color: 'rgba(156, 163, 175, 1)',
+          color: themeColors.mutedForeground,
           font: {
             size: 10,
           },
           // No callback here - just show plain numbers
         },
         grid: {
-          color: 'rgba(55, 65, 81, 0.3)',
+          color: themeColors.border,
         },
       },
     },
@@ -548,7 +596,7 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
       legend: {
         position: 'bottom' as const,
         labels: {
-          color: 'white',
+          color: themeColors.foreground,
           padding: 10,
           usePointStyle: true,
           font: {
@@ -557,10 +605,10 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
         },
       },
       tooltip: {
-        backgroundColor: 'rgba(17, 24, 39, 0.9)',
-        titleColor: 'white',
-        bodyColor: 'white',
-        borderColor: 'rgba(75, 85, 99, 1)',
+        backgroundColor: themeColors.popover,
+        titleColor: themeColors.popoverForeground,
+        bodyColor: themeColors.popoverForeground,
+        borderColor: themeColors.border,
         borderWidth: 1,
       },
     },
