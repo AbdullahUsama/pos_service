@@ -43,6 +43,26 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
     fetchStats();
   }, []);
 
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showAddUserForm) {
+        setShowAddUserForm(false);
+      }
+    };
+
+    if (showAddUserForm) {
+      document.addEventListener('keydown', handleEscape);
+      // Prevent background scrolling when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [showAddUserForm]);
+
   const fetchStats = async () => {
     try {
       // Fetch total items
@@ -133,6 +153,10 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
 
   const navigateToSalesReport = () => {
     router.push('/admin/sales');
+  };
+
+  const navigateToAnalytics = () => {
+    router.push('/admin/analytics');
   };
 
   // Notes functions
@@ -237,7 +261,7 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
           <div className="flex gap-2">
             <Button
               onClick={() => setShowAddUserForm(!showAddUserForm)}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 shadow-lg hover:shadow-xl transition-all duration-200"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Cashier
@@ -254,12 +278,18 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
         </div>
       </header>
 
-      <div className="p-3 lg:p-6">
-        {/* Add User Form */}
-        {showAddUserForm && (
-          <Card className="bg-gray-800 border-gray-700 mb-6">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-white">Add New Cashier</CardTitle>
+      {/* Add User Modal */}
+      {showAddUserForm && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowAddUserForm(false)}
+        >
+          <div 
+            className="bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-700"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-6 border-b border-gray-700">
+              <h2 className="text-xl font-semibold text-white">Add New Cashier</h2>
               <Button
                 variant="ghost"
                 size="sm"
@@ -268,10 +298,11 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
               >
                 <X className="h-4 w-4" />
               </Button>
-            </CardHeader>
-            <CardContent>
+            </div>
+            
+            <div className="p-6">
               <form onSubmit={handleAddUser} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div>
                     <Label htmlFor="email" className="text-gray-300">Email</Label>
                     <Input
@@ -279,8 +310,9 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="bg-gray-700 border-gray-600 text-white"
+                      className="bg-gray-700 border-gray-600 text-white mt-1"
                       required
+                      placeholder="Enter cashier email"
                     />
                   </div>
                   <div>
@@ -290,18 +322,19 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
                       type="password"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="bg-gray-700 border-gray-600 text-white"
+                      className="bg-gray-700 border-gray-600 text-white mt-1"
                       required
                       minLength={6}
+                      placeholder="Enter password (min 6 characters)"
                     />
                   </div>
                 </div>
                 
-                <div className="flex gap-2">
+                <div className="flex gap-3 pt-4">
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
+                    className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 flex-1"
                   >
                     {isLoading ? 'Creating...' : 'Create Cashier'}
                   </Button>
@@ -315,10 +348,12 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
                   </Button>
                 </div>
               </form>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          </div>
+        </div>
+      )}
 
+      <div className="p-3 lg:p-6">
         {/* Success/Error Messages */}
         {message && (
           <div className="mb-4 p-3 bg-green-800 text-green-200 rounded-lg text-sm">
@@ -338,9 +373,9 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">Total Items</p>
-                  <p className="text-2xl font-bold text-white">{stats.totalItems}</p>
+                  <p className="text-2xl font-bold text-slate-300">{stats.totalItems}</p>
                 </div>
-                <Package className="h-8 w-8 text-blue-400" />
+                <Package className="h-8 w-8 text-slate-400" />
               </div>
             </CardContent>
           </Card>
@@ -350,9 +385,8 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">Total Sales</p>
-                  <p className="text-2xl font-bold text-green-400">{formatCurrency(stats.totalSales)}</p>
+                  <p className="text-2xl font-bold text-emerald-300">{formatCurrency(stats.totalSales)}</p>
                 </div>
-                <DollarSign className="h-8 w-8 text-green-400" />
               </div>
             </CardContent>
           </Card>
@@ -362,9 +396,9 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">Today's Sales</p>
-                  <p className="text-2xl font-bold text-yellow-400">{formatCurrency(stats.todaySales)}</p>
+                  <p className="text-2xl font-bold text-amber-300">{formatCurrency(stats.todaySales)}</p>
                 </div>
-                <BarChart3 className="h-8 w-8 text-yellow-400" />
+                <BarChart3 className="h-8 w-8 text-amber-400" />
               </div>
             </CardContent>
           </Card>
@@ -374,9 +408,9 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">Active Cashiers</p>
-                  <p className="text-2xl font-bold text-purple-400">{stats.totalCashiers}</p>
+                  <p className="text-2xl font-bold text-indigo-300">{stats.totalCashiers}</p>
                 </div>
-                <Users className="h-8 w-8 text-purple-400" />
+                <Users className="h-8 w-8 text-indigo-400" />
               </div>
             </CardContent>
           </Card>
@@ -389,20 +423,12 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
             className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-colors cursor-pointer"
             onClick={navigateToInventory}
           >
-            <CardHeader className="text-center">
-              <div className="mx-auto bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+            <CardContent className="text-center p-8">
+              <div className="mx-auto bg-slate-600 w-16 h-16 rounded-full flex items-center justify-center mb-6">
                 <Package className="h-8 w-8 text-white" />
               </div>
-              <CardTitle className="text-white text-xl lg:text-2xl">Inventory Management</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-gray-300 mb-4">
-                Manage your shop inventory - add, edit, and delete items. View current stock and pricing.
-              </p>
-              <p className="text-sm text-gray-400 mb-6">
-                Current items in inventory: <span className="text-blue-400 font-semibold">{stats.totalItems}</span>
-              </p>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <h3 className="text-white text-xl font-semibold mb-6">Inventory Management</h3>
+              <Button className="bg-slate-600 hover:bg-slate-500 text-white w-full">
                 Manage Inventory
               </Button>
             </CardContent>
@@ -413,20 +439,12 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
             className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-colors cursor-pointer"
             onClick={navigateToSalesReport}
           >
-            <CardHeader className="text-center">
-              <div className="mx-auto bg-green-600 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+            <CardContent className="text-center p-8">
+              <div className="mx-auto bg-emerald-600 w-16 h-16 rounded-full flex items-center justify-center mb-6">
                 <BarChart3 className="h-8 w-8 text-white" />
               </div>
-              <CardTitle className="text-white text-xl lg:text-2xl">Sales Reports</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-gray-300 mb-4">
-                View detailed sales reports, transaction history, and cashier performance analytics.
-              </p>
-              <p className="text-sm text-gray-400 mb-6">
-                Today's revenue: <span className="text-green-400 font-semibold">{formatCurrency(stats.todaySales)}</span>
-              </p>
-              <Button className="bg-green-600 hover:bg-green-700 text-white">
+              <h3 className="text-white text-xl font-semibold mb-6">Sales Reports</h3>
+              <Button className="bg-emerald-600 hover:bg-emerald-500 text-white w-full">
                 View Reports
               </Button>
             </CardContent>
@@ -437,20 +455,12 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
             className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-colors cursor-pointer"
             onClick={handleViewNotes}
           >
-            <CardHeader className="text-center">
-              <div className="mx-auto bg-purple-600 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+            <CardContent className="text-center p-8">
+              <div className="mx-auto bg-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mb-6">
                 <StickyNote className="h-8 w-8 text-white" />
               </div>
-              <CardTitle className="text-white text-xl lg:text-2xl">View Notes</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-gray-300 mb-4">
-                View all cashier shift notes and important information left by staff members.
-              </p>
-              <p className="text-sm text-gray-400 mb-6">
-                Monitor staff communications and shift updates
-              </p>
-              <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+              <h3 className="text-white text-xl font-semibold mb-6">View Notes</h3>
+              <Button className="bg-indigo-600 hover:bg-indigo-500 text-white w-full">
                 View All Notes
               </Button>
             </CardContent>
@@ -497,7 +507,7 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
                         <div className="flex items-start justify-between mb-2">
                           <div>
                             <h3 className="font-medium text-white text-lg">{note.title}</h3>
-                            <p className="text-sm text-purple-400">by {note.cashier_email}</p>
+                            <p className="text-sm text-gray-400">by {note.cashier_email}</p>
                           </div>
                           <div className="flex items-center gap-4 text-sm text-gray-400">
                             <div className="flex items-center gap-1">

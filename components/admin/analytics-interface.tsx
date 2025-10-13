@@ -433,7 +433,11 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
       legend: {
         labels: {
           color: 'white',
+          font: {
+            size: 12,
+          },
         },
+        position: 'top' as const,
       },
       tooltip: {
         backgroundColor: 'rgba(17, 24, 39, 0.9)',
@@ -447,6 +451,10 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
       x: {
         ticks: {
           color: 'rgba(156, 163, 175, 1)',
+          font: {
+            size: 10,
+          },
+          maxRotation: 45,
         },
         grid: {
           color: 'rgba(55, 65, 81, 0.3)',
@@ -455,6 +463,9 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
       y: {
         ticks: {
           color: 'rgba(156, 163, 175, 1)',
+          font: {
+            size: 10,
+          },
           callback: function(value: any) {
             if (typeof value === 'number') {
               return formatCurrency(value);
@@ -469,16 +480,68 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
     },
   };
 
+  const paymentMethodsOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: {
+          color: 'white',
+          font: {
+            size: 12,
+          },
+        },
+        position: 'top' as const,
+      },
+      tooltip: {
+        backgroundColor: 'rgba(17, 24, 39, 0.9)',
+        titleColor: 'white',
+        bodyColor: 'white',
+        borderColor: 'rgba(75, 85, 99, 1)',
+        borderWidth: 1,
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: 'rgba(156, 163, 175, 1)',
+          font: {
+            size: 10,
+          },
+          maxRotation: 45,
+        },
+        grid: {
+          color: 'rgba(55, 65, 81, 0.3)',
+        },
+      },
+      y: {
+        ticks: {
+          color: 'rgba(156, 163, 175, 1)',
+          font: {
+            size: 10,
+          },
+          // No callback here - just show plain numbers
+        },
+        grid: {
+          color: 'rgba(55, 65, 81, 0.3)',
+        },
+      },
+    },
+  };
+
   const pieOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'right' as const,
+        position: 'bottom' as const,
         labels: {
           color: 'white',
-          padding: 20,
+          padding: 10,
           usePointStyle: true,
+          font: {
+            size: 10,
+          },
         },
       },
       tooltip: {
@@ -509,43 +572,43 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">Loading analytics...</p>
+          <p className="text-gray-400 text-sm lg:text-base">Loading analytics...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-4 lg:p-6">
+    <div className="min-h-screen bg-gray-900 p-2 sm:p-4 lg:p-6">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
             <Button
               variant="outline"
               onClick={handleBackToSales}
-              className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+              className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700 w-full sm:w-auto"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Sales Report
             </Button>
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-white">Sales Analytics</h1>
-              <p className="text-gray-400">Logged in as: {userEmail}</p>
+            <div className="text-center sm:text-left">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Sales Analytics</h1>
+              <p className="text-sm text-gray-400">Logged in as: {userEmail}</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
             <Button
               variant="outline"
               onClick={() => {
                 console.log('🔄 Manual refresh triggered');
                 fetchData();
               }}
-              className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+              className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700 w-full sm:w-auto"
               disabled={isLoading}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
@@ -554,7 +617,7 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="bg-gray-800 border border-gray-700 text-white rounded-md px-3 py-2 focus:border-blue-400 focus:ring-blue-400 focus:outline-none"
+              className="bg-gray-800 border border-gray-700 text-white rounded-md px-3 py-2 focus:border-blue-400 focus:ring-blue-400 focus:outline-none text-sm"
             >
               <option value="all">All Time</option>
               <option value="today">Today</option>
@@ -566,69 +629,69 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
         <Card className="bg-gray-800 border-gray-700">
-          <CardContent className="p-4">
+          <CardContent className="p-3 lg:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm">Total Revenue</p>
-                <p className="text-2xl font-bold text-green-400">{formatCurrency(kpiData.totalRevenue)}</p>
+                <p className="text-gray-400 text-xs lg:text-sm">Total Revenue</p>
+                <p className="text-lg lg:text-2xl font-bold text-green-400">{formatCurrency(kpiData.totalRevenue)}</p>
               </div>
-              <DollarSign className="h-8 w-8 text-green-400" />
+              <DollarSign className="h-6 w-6 lg:h-8 lg:w-8 text-green-400" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gray-800 border-gray-700">
-          <CardContent className="p-4">
+          <CardContent className="p-3 lg:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm">Transactions</p>
-                <p className="text-2xl font-bold text-blue-400">{kpiData.totalTransactions}</p>
+                <p className="text-gray-400 text-xs lg:text-sm">Transactions</p>
+                <p className="text-lg lg:text-2xl font-bold text-blue-400">{kpiData.totalTransactions}</p>
               </div>
-              <CreditCard className="h-8 w-8 text-blue-400" />
+              <CreditCard className="h-6 w-6 lg:h-8 lg:w-8 text-blue-400" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gray-800 border-gray-700">
-          <CardContent className="p-4">
+          <CardContent className="p-3 lg:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm">Avg Transaction</p>
-                <p className="text-2xl font-bold text-orange-400">{formatCurrency(kpiData.avgTransaction)}</p>
+                <p className="text-gray-400 text-xs lg:text-sm">Avg Transaction</p>
+                <p className="text-lg lg:text-2xl font-bold text-orange-400">{formatCurrency(kpiData.avgTransaction)}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-orange-400" />
+              <TrendingUp className="h-6 w-6 lg:h-8 lg:w-8 text-orange-400" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gray-800 border-gray-700">
-          <CardContent className="p-4">
+          <CardContent className="p-3 lg:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm">Active Cashiers</p>
-                <p className="text-2xl font-bold text-purple-400">{kpiData.uniqueCashiers}</p>
+                <p className="text-gray-400 text-xs lg:text-sm">Active Cashiers</p>
+                <p className="text-lg lg:text-2xl font-bold text-purple-400">{kpiData.uniqueCashiers}</p>
               </div>
-              <Users className="h-8 w-8 text-purple-400" />
+              <Users className="h-6 w-6 lg:h-8 lg:w-8 text-purple-400" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Charts Grid */}
-      <div className="space-y-6">
+      <div className="space-y-4 lg:space-y-6">
         {/* First Row - Cashier Sales & Product Quantities */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
           <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-white flex items-center gap-2 text-base lg:text-lg">
+                <BarChart3 className="h-4 w-4 lg:h-5 lg:w-5" />
                 Sales by Cashier
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-80">
+            <CardContent className="pt-0">
+              <div className="h-64 lg:h-80">
                 <Bar 
                   key={`cashier-sales-${chartKey}`}
                   data={getCashierSalesData()} 
@@ -639,14 +702,14 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
           </Card>
 
           <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Package className="h-5 w-5" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-white flex items-center gap-2 text-base lg:text-lg">
+                <Package className="h-4 w-4 lg:h-5 lg:w-5" />
                 Products by Quantity (Top 10)
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-80">
+            <CardContent className="pt-0">
+              <div className="h-64 lg:h-80">
                 <Pie 
                   key={`product-quantity-${chartKey}`}
                   data={getProductQuantityData()} 
@@ -658,16 +721,16 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
         </div>
 
         {/* Second Row - Sales Trend & Payment Methods */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
           <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-white flex items-center gap-2 text-base lg:text-lg">
+                <TrendingUp className="h-4 w-4 lg:h-5 lg:w-5" />
                 Sales Trend Over Time
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-80">
+            <CardContent className="pt-0">
+              <div className="h-64 lg:h-80">
                 <Line 
                   key={`sales-trend-${chartKey}`}
                   data={getSalesTrendData()} 
@@ -678,18 +741,18 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
           </Card>
 
           <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-white flex items-center gap-2 text-base lg:text-lg">
+                <CreditCard className="h-4 w-4 lg:h-5 lg:w-5" />
                 Payment Methods Distribution
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-80">
+            <CardContent className="pt-0">
+              <div className="h-64 lg:h-80">
                 <Bar 
                   key={`payment-methods-${chartKey}`}
                   data={getPaymentMethodData()} 
-                  options={chartOptions} 
+                  options={paymentMethodsOptions} 
                 />
               </div>
             </CardContent>
@@ -697,16 +760,16 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
         </div>
 
         {/* Third Row - Top Revenue Items */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
           <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-white flex items-center gap-2 text-base lg:text-lg">
+                <DollarSign className="h-4 w-4 lg:h-5 lg:w-5" />
                 Top Revenue Items
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-80">
+            <CardContent className="pt-0">
+              <div className="h-64 lg:h-80">
                 <Doughnut 
                   key={`revenue-items-${chartKey}`}
                   data={getTopRevenueItemsData()} 
@@ -717,17 +780,17 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
           </Card>
 
           <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-white flex items-center gap-2 text-base lg:text-lg">
+                <BarChart3 className="h-4 w-4 lg:h-5 lg:w-5" />
                 Additional Insights
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-80 flex flex-col justify-center space-y-4 text-gray-300">
+            <CardContent className="pt-0">
+              <div className="h-64 lg:h-80 flex flex-col justify-center space-y-3 lg:space-y-4 text-gray-300">
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-4">Quick Statistics</h3>
-                  <div className="space-y-3">
+                  <h3 className="text-base lg:text-lg font-semibold mb-3 lg:mb-4">Quick Statistics</h3>
+                  <div className="space-y-2 lg:space-y-3 text-sm lg:text-base">
                     <div className="flex justify-between">
                       <span>Total Items Sold:</span>
                       <span className="font-bold">
@@ -744,7 +807,7 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
                     </div>
                     <div className="flex justify-between">
                       <span>Best Sales Day:</span>
-                      <span className="font-bold">
+                      <span className="font-bold text-xs lg:text-sm">
                         {(() => {
                           const dailySales: Record<string, number> = {};
                           getFilteredSales().forEach(sale => {
