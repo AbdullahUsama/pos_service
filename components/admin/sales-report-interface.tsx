@@ -69,27 +69,29 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
       } else {
         setSales(data || []);
         
-        // Fetch cashier emails for unique cashier IDs
+        // Fetch cashier emails including deleted users
         const uniqueCashierIds = [...new Set((data || []).map(sale => sale.cashier_id))];
         
         if (uniqueCashierIds.length > 0) {
           try {
-            const response = await fetch('/api/users', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ userIds: uniqueCashierIds }),
-            });
+            const emailsMap: Record<string, string> = {};
             
-            if (response.ok) {
-              const { userEmails } = await response.json();
-              setCashierEmails(userEmails);
-            } else {
-              console.error('Failed to fetch user emails');
+            // Use the get_cashier_display_name function for each cashier
+            for (const cashierId of uniqueCashierIds) {
+              const { data: displayName, error } = await supabase.rpc('get_cashier_display_name', {
+                cashier_id: cashierId
+              });
+              
+              if (!error && displayName) {
+                emailsMap[cashierId] = displayName;
+              } else {
+                emailsMap[cashierId] = '[UNKNOWN USER]';
+              }
             }
+            
+            setCashierEmails(emailsMap);
           } catch (error) {
-            console.error('Error fetching user emails:', error);
+            console.error('Error fetching cashier display names:', error);
           }
         }
       }

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LogOut, Package, BarChart3, Users, DollarSign, Plus, X, StickyNote, FileText, Trash2, Calendar, Clock } from 'lucide-react';
+import { LogOut, Package, BarChart3, Users, DollarSign, Plus, X, StickyNote, FileText, Trash2, Calendar, Clock, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface AdminInterfaceProps {
@@ -23,6 +23,9 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
     totalCashiers: 0
   });
   const [showAddUserForm, setShowAddUserForm] = useState(false);
+  const [showManageCashiers, setShowManageCashiers] = useState(false);
+  const [cashiers, setCashiers] = useState<any[]>([]);
+  const [cashiersLoading, setCashiersLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -36,6 +39,19 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [notesLoading, setNotesLoading] = useState(false);
   
+  // Google Sheets state
+  const [sheetsStatus, setSheetsStatus] = useState<{
+    connected: boolean;
+    message: string;
+    testing: boolean;
+    initializing: boolean;
+  }>({
+    connected: false,
+    message: '',
+    testing: false,
+    initializing: false
+  });
+  
   const router = useRouter();
   const supabase = createClient();
 
@@ -43,15 +59,20 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
     fetchStats();
   }, []);
 
-  // Handle escape key to close modal
+  // Handle escape key to close modals
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && showAddUserForm) {
-        setShowAddUserForm(false);
+      if (event.key === 'Escape') {
+        if (showAddUserForm) {
+          setShowAddUserForm(false);
+        }
+        if (showManageCashiers) {
+          setShowManageCashiers(false);
+        }
       }
     };
 
-    if (showAddUserForm) {
+    if (showAddUserForm || showManageCashiers) {
       document.addEventListener('keydown', handleEscape);
       // Prevent background scrolling when modal is open
       document.body.style.overflow = 'hidden';
@@ -61,7 +82,7 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [showAddUserForm]);
+  }, [showAddUserForm, showManageCashiers]);
 
   const fetchStats = async () => {
     try {
@@ -159,6 +180,193 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
     router.push('/admin/analytics');
   };
 
+  // Cashier management functions
+  const fetchAllCashiers = async () => {
+    setCashiersLoading(true);
+    try {
+      // Get cashiers from sales records (same approach as sales report)
+      const { data: salesData, error: salesError } = await supabase
+        .from('sales')
+        .select('cashier_id')
+        .order('created_at', { ascending: false });
+
+      if (salesError) {
+        console.error('Error fetching sales for cashiers:', salesError);
+        setError('Failed to fetch cashiers from sales records');
+        return;
+      }
+
+      // Get unique cashier IDs from sales
+      const uniqueCashierIds = [...new Set((salesData || []).map(sale => sale.cashier_id))];
+      
+      if (uniqueCashierIds.length === 0) {
+        setCashiers([]);
+        setCashiersLoading(false);
+        return;
+      }
+
+      // Fetch display names and status for each cashier
+      const cashiersList = [];
+      
+      for (const cashierId of uniqueCashierIds) {
+        try {
+          // Get display name using the same function as sales report
+          const { data: displayName, error: nameError } = await supabase.rpc('get_cashier_display_name', {
+            cashier_id: cashierId
+          });
+
+          if (!nameError && displayName) {
+            // Check if this is an active user (not deleted)
+            const isDeleted = displayName.includes('[DELETED]');
+            const email = isDeleted ? displayName.replace('[DELETED] ', '') : displayName;
+            
+            // Try to get additional details from profiles for active users
+            let role = 'cashier';
+            let username = email;
+            let created_at = null;
+            
+            if (!isDeleted) {
+              const { data: profileData } = await supabase
+                .from('profiles')
+                .select('role, username, created_at')
+                .eq('id', cashierId)
+                .single();
+              
+              if (profileData) {
+                role = profileData.role || 'cashier';
+                username = profileData.username || email;
+                created_at = profileData.created_at;
+              }
+            } else {
+              // For deleted users, try to get info from deleted_users table
+              const { data: deletedData } = await supabase
+                .from('deleted_users')
+                .select('original_role, original_username, deleted_at, created_at')
+                .eq('id', cashierId)
+                .single();
+              
+              if (deletedData) {
+                role = deletedData.original_role || 'cashier';
+                username = deletedData.original_username || email;
+                created_at = deletedData.created_at;
+              }
+            }
+
+            cashiersList.push({
+              user_id: cashierId,
+              email: email,
+              role: role,
+              username: username,
+              status: isDeleted ? 'DELETED' : 'ACTIVE',
+              created_at: created_at,
+              deleted_at: isDeleted ? new Date() : null // Approximate, we could get exact from deleted_users
+            });
+          }
+        } catch (err) {
+          console.error('Error processing cashier:', cashierId, err);
+          // Add with minimal info if there's an error
+          cashiersList.push({
+            user_id: cashierId,
+            email: '[UNKNOWN USER]',
+            role: 'cashier',
+            username: '[UNKNOWN USER]',
+            status: 'UNKNOWN',
+            created_at: null,
+            deleted_at: null
+          });
+        }
+      }
+
+      // Sort by created_at, with null values last
+      cashiersList.sort((a, b) => {
+        if (!a.created_at && !b.created_at) return 0;
+        if (!a.created_at) return 1;
+        if (!b.created_at) return -1;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+
+      setCashiers(cashiersList);
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Network error occurred');
+    } finally {
+      setCashiersLoading(false);
+    }
+  };
+
+  const deleteCashier = async (email: string) => {
+    if (!confirm(`Are you sure you want to delete cashier: ${email}?`)) return;
+    
+    try {
+      const { data, error } = await supabase.rpc('soft_delete_user_with_sql', {
+        user_email: email,
+        deleted_by_admin: userEmail,
+        deletion_reason: 'Deleted by admin'
+      });
+
+      if (error) {
+        console.error('Error deleting cashier:', error);
+        
+        // Check if it's a function not found error
+        if (error.message?.includes('function') || error.code === '42883') {
+          setError('Delete function not available. Please run the SQL functions in your database first.');
+        } else {
+          setError('Failed to delete cashier');
+        }
+        return;
+      }
+
+      const result = data as any;
+      if (result.success) {
+        setMessage(`Cashier ${email} deleted successfully. ${result.sales_records_preserved} sales records preserved.`);
+        fetchAllCashiers(); // Refresh list
+        fetchStats(); // Refresh stats
+        setTimeout(() => setMessage(''), 5000);
+      } else {
+        setError(result.error || 'Failed to delete cashier');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Network error occurred');
+    }
+  };
+
+  const restoreCashier = async (email: string) => {
+    if (!confirm(`Are you sure you want to restore cashier: ${email}?`)) return;
+    
+    try {
+      const { data, error } = await supabase.rpc('restore_deleted_user', {
+        user_email: email,
+        restored_by_admin: userEmail
+      });
+
+      if (error) {
+        console.error('Error restoring cashier:', error);
+        
+        // Check if it's a function not found error
+        if (error.message?.includes('function') || error.code === '42883') {
+          setError('Restore function not available. Please run the SQL functions in your database first.');
+        } else {
+          setError('Failed to restore cashier');
+        }
+        return;
+      }
+
+      const result = data as any;
+      if (result.success) {
+        setMessage(`Cashier ${email} restored successfully.`);
+        fetchAllCashiers(); // Refresh list
+        fetchStats(); // Refresh stats
+        setTimeout(() => setMessage(''), 5000);
+      } else {
+        setError(result.error || 'Failed to restore cashier');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Network error occurred');
+    }
+  };
+
   // Notes functions
   const fetchAllNotes = async () => {
     setNotesLoading(true);
@@ -240,6 +448,85 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
     });
   };
 
+  // Google Sheets functions
+  const testGoogleSheetsConnection = async () => {
+    setSheetsStatus(prev => ({ ...prev, testing: true }));
+    
+    try {
+      const response = await fetch('/api/google-sheets', {
+        method: 'GET'
+      });
+      
+      const result = await response.json();
+      setSheetsStatus(prev => ({
+        ...prev,
+        connected: result.connected,
+        message: result.message,
+        testing: false
+      }));
+      
+      if (result.connected) {
+        setMessage('Google Sheets connection successful!');
+      } else {
+        setError('Google Sheets connection failed. Check your credentials.');
+      }
+      
+      setTimeout(() => {
+        setMessage('');
+        setError('');
+      }, 3000);
+    } catch (error) {
+      console.error('Error testing Google Sheets connection:', error);
+      setSheetsStatus(prev => ({
+        ...prev,
+        connected: false,
+        message: 'Connection test failed',
+        testing: false
+      }));
+      setError('Failed to test Google Sheets connection');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
+  const initializeGoogleSheets = async () => {
+    setSheetsStatus(prev => ({ ...prev, initializing: true }));
+    
+    try {
+      const response = await fetch('/api/google-sheets', {
+        method: 'POST'
+      });
+      
+      const result = await response.json();
+      setSheetsStatus(prev => ({
+        ...prev,
+        connected: result.connected,
+        message: result.message,
+        initializing: false
+      }));
+      
+      if (result.success) {
+        setMessage('Google Sheets initialized successfully!');
+      } else {
+        setError('Failed to initialize Google Sheets');
+      }
+      
+      setTimeout(() => {
+        setMessage('');
+        setError('');
+      }, 3000);
+    } catch (error) {
+      console.error('Error initializing Google Sheets:', error);
+      setSheetsStatus(prev => ({
+        ...prev,
+        connected: false,
+        message: 'Initialization failed',
+        initializing: false
+      }));
+      setError('Failed to initialize Google Sheets');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString('en-US', {
@@ -260,11 +547,14 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
           </div>
           <div className="flex gap-2">
             <Button
-              onClick={() => setShowAddUserForm(!showAddUserForm)}
+              onClick={() => {
+                setShowManageCashiers(true);
+                fetchAllCashiers();
+              }}
               className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 shadow-lg hover:shadow-xl transition-all duration-200"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Cashier
+              <Users className="h-4 w-4 mr-2" />
+              Manage Cashiers
             </Button>
             <Button
               variant="outline"
@@ -353,8 +643,125 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
         </div>
       )}
 
-      <div className="p-3 lg:p-6">
-        {/* Success/Error Messages */}
+      {/* Manage Cashiers Modal */}
+      {showManageCashiers && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowManageCashiers(false)}
+        >
+          <div 
+            className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] border border-gray-700 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-6 border-b border-gray-700">
+              <h2 className="text-xl font-semibold text-white">Manage Cashiers</h2>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    setShowManageCashiers(false);
+                    setShowAddUserForm(true);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-500 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowManageCashiers(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-auto p-6">
+              {cashiersLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  <span className="ml-3 text-gray-400">Loading cashiers...</span>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {cashiers.length === 0 ? (
+                    <p className="text-gray-400 text-center py-8">No cashiers found</p>
+                  ) : (
+                    cashiers.map((cashier) => (
+                      <div 
+                        key={cashier.user_id} 
+                        className={`p-4 rounded-lg border ${
+                          cashier.status === 'ACTIVE' 
+                            ? 'bg-gray-700 border-gray-600' 
+                            : 'bg-red-900/20 border-red-800'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-3 h-3 rounded-full ${
+                                cashier.status === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500'
+                              }`} />
+                              <div>
+                                <h3 className="text-white font-medium">{cashier.email}</h3>
+                                <p className="text-sm text-gray-400">
+                                  Role: {cashier.role} | Status: {cashier.status}
+                                  {cashier.deleted_at && (
+                                    <span className="ml-2">
+                                      Deleted: {new Date(cashier.deleted_at).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            {cashier.status === 'ACTIVE' ? (
+                              <Button
+                                onClick={() => deleteCashier(cashier.email)}
+                                variant="outline"
+                                size="sm"
+                                className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete
+                              </Button>
+                            ) : (
+                              <Button
+                                onClick={() => restoreCashier(cashier.email)}
+                                variant="outline"
+                                size="sm"
+                                className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white"
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Restore
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="p-6 border-t border-gray-700">
+              <Button
+                onClick={fetchAllCashiers}
+                variant="outline"
+                className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="p-3 lg:p-6">{/* Success/Error Messages */}
         {message && (
           <div className="mb-4 p-3 bg-green-800 text-green-200 rounded-lg text-sm">
             {message}
@@ -417,7 +824,7 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
         </div>
 
         {/* Main Action Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {/* Inventory Management Card */}
           <Card 
             className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-colors cursor-pointer"
@@ -463,6 +870,37 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
               <Button className="bg-indigo-600 hover:bg-indigo-500 text-white w-full">
                 View All Notes
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Google Sheets Card */}
+          <Card className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-colors">
+            <CardContent className="text-center p-8">
+              <div className="mx-auto bg-green-600 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                <FileText className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-white text-xl font-semibold mb-4">Google Sheets</h3>
+              <div className="flex flex-col gap-2">
+                <Button 
+                  onClick={testGoogleSheetsConnection}
+                  disabled={sheetsStatus.testing}
+                  className="bg-green-600 hover:bg-green-500 text-white w-full text-sm"
+                >
+                  {sheetsStatus.testing ? 'Testing...' : 'Test Connection'}
+                </Button>
+                <Button 
+                  onClick={initializeGoogleSheets}
+                  disabled={sheetsStatus.initializing}
+                  className="bg-blue-600 hover:bg-blue-500 text-white w-full text-sm"
+                >
+                  {sheetsStatus.initializing ? 'Initializing...' : 'Initialize Sheet'}
+                </Button>
+              </div>
+              {sheetsStatus.message && (
+                <div className={`mt-2 text-xs ${sheetsStatus.connected ? 'text-green-400' : 'text-red-400'}`}>
+                  {sheetsStatus.message}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -113,24 +113,31 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
 
       setSales(data || []);
 
-      // Fetch cashier emails
+      // Fetch cashier emails for active users only (exclude deleted users)
       if (data && data.length > 0) {
         const uniqueCashierIds = [...new Set(data.map(sale => sale.cashier_id))];
         
         try {
-          const response = await fetch('/api/users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userIds: uniqueCashierIds }),
-          });
+          const emailsMap: Record<string, string> = {};
           
-          if (response.ok) {
-            const { userEmails } = await response.json();
-            setCashierEmails(userEmails);
-            console.log('📧 Fetched cashier emails:', userEmails);
+          // Use the get_cashier_display_name function for each cashier
+          for (const cashierId of uniqueCashierIds) {
+            const { data: displayName, error } = await supabase.rpc('get_cashier_display_name', {
+              cashier_id: cashierId
+            });
+            
+            if (!error && displayName) {
+              // Only include active users (exclude deleted ones)
+              if (!displayName.includes('[DELETED]')) {
+                emailsMap[cashierId] = displayName;
+              }
+            }
           }
+          
+          setCashierEmails(emailsMap);
+          console.log('📧 Fetched active cashier display names:', emailsMap);
         } catch (emailError) {
-          console.error('Error fetching user emails:', emailError);
+          console.error('Error fetching cashier display names:', emailError);
         }
       }
     } catch (error) {
@@ -197,8 +204,12 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
     const cashierSales: Record<string, number> = {};
 
     filteredSales.forEach(sale => {
-      const cashierEmail = cashierEmails[sale.cashier_id] || 'Unknown';
-      cashierSales[cashierEmail] = (cashierSales[cashierEmail] || 0) + sale.total_amount;
+      const cashierEmail = cashierEmails[sale.cashier_id];
+      
+      // Only include sales from active cashiers (skip deleted ones)
+      if (cashierEmail && !cashierEmail.includes('[DELETED]')) {
+        cashierSales[cashierEmail] = (cashierSales[cashierEmail] || 0) + sale.total_amount;
+      }
     });
 
     const labels = Object.keys(cashierSales);
@@ -560,11 +571,18 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
     const totalTransactions = filteredSales.length;
     const avgTransaction = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
     
+    // Count only active cashiers (exclude deleted ones)
+    const activeCashierIds = [...new Set(filteredSales.map(sale => sale.cashier_id))]
+      .filter(cashierId => {
+        const cashierEmail = cashierEmails[cashierId];
+        return cashierEmail && !cashierEmail.includes('[DELETED]');
+      });
+    
     return {
       totalRevenue,
       totalTransactions,
       avgTransaction,
-      uniqueCashiers: [...new Set(filteredSales.map(sale => sale.cashier_id))].length,
+      uniqueCashiers: activeCashierIds.length,
     };
   };
 

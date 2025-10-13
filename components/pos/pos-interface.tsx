@@ -155,101 +155,38 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
     setIsLoading(true);
     
     try {
-      // First, validate that all items with quantity tracking have enough stock
-      for (const cartItem of cart) {
-        const { data: itemData, error: itemError } = await supabase
-          .from('items')
-          .select('quantity, name')
-          .eq('id', cartItem.id)
-          .single();
-        
-        if (itemError) {
-          console.error('Error validating item stock:', itemError);
-          throw new Error(`Could not validate stock for ${cartItem.name}`);
-        }
-        
-        // Check if item has quantity tracking and sufficient stock
-        if (itemData?.quantity !== null && itemData?.quantity !== undefined) {
-          if (itemData.quantity < cartItem.quantity) {
-            throw new Error(`Insufficient stock for ${itemData.name}. Available: ${itemData.quantity}, Requested: ${cartItem.quantity}`);
-          }
-        }
+      // Call the API to process the sale
+      const response = await fetch('/api/sales', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          totalAmount: getTotalAmount(),
+          paymentMethod,
+          cartDetails: cart
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to process sale');
       }
-      
-      // Record the sale
-      const { error: salesError } = await supabase
-        .from('sales')
-        .insert({
-          cashier_id: userId,
-          total_amount: getTotalAmount(),
-          payment_method: paymentMethod,
-          cart_details: cart
-        });
-      
-      if (salesError) throw salesError;
-      
-      // Update inventory quantities for items that have quantity tracking
-      for (const cartItem of cart) {
-        console.log(`Processing item: ${cartItem.name}, quantity in cart: ${cartItem.quantity}`);
-        
-        // Get current item data to check if it has quantity tracking
-        const { data: itemData, error: itemError } = await supabase
-          .from('items')
-          .select('quantity')
-          .eq('id', cartItem.id)
-          .single();
-        
-        if (itemError) {
-          console.error('Error fetching item for quantity update:', itemError);
-          continue; // Continue with other items even if one fails
-        }
-        
-        console.log(`Current quantity in DB: ${itemData?.quantity}`);
-        
-        // Only update if item has quantity tracking (not null)
-        if (itemData?.quantity !== null && itemData?.quantity !== undefined) {
-          const newQuantity = Math.max(0, itemData.quantity - cartItem.quantity);
-          console.log(`Updating quantity from ${itemData.quantity} to ${newQuantity}`);
-          
-          const { data: updateData, error: updateError } = await supabase
-            .from('items')
-            .update({ quantity: newQuantity })
-            .eq('id', cartItem.id)
-            .select(); // Add select to return updated data
-          
-          if (updateError) {
-            console.error('Error updating item quantity:', updateError);
-            console.error(`Failed to update quantity for ${cartItem.name}:`, updateError);
-          } else if (updateData && updateData.length > 0) {
-            console.log(`Successfully updated ${cartItem.name} quantity to ${newQuantity}. DB response:`, updateData[0]);
-          } else {
-            console.error(`Update appeared successful but no rows were affected for ${cartItem.name}`);
-            console.log('Update response:', updateData);
-          }
-          
-          // Verify the update by fetching the item again
-          const { data: verifyData, error: verifyError } = await supabase
-            .from('items')
-            .select('quantity')
-            .eq('id', cartItem.id)
-            .single();
-          
-          if (!verifyError && verifyData) {
-            console.log(`Verification: ${cartItem.name} quantity in DB is now: ${verifyData.quantity}`);
-          } else {
-            console.error('Error verifying update:', verifyError);
-          }
-        } else {
-          console.log(`Item ${cartItem.name} has no quantity tracking (unlimited stock)`);
-        }
-      }
-      
+
+      // Sale was successful
       setCart([]);
-      setSuccessMessage(`Sale Complete! Payment: ${paymentMethod}`);
+      setSuccessMessage(`Sale Complete! Payment: ${paymentMethod} | Sale ID: ${result.saleId.slice(-8)}`);
       fetchTodaysStats(); // Refresh stats
       fetchItems(); // Refresh items to get updated quantities
       
-      setTimeout(() => setSuccessMessage(''), 1500);
+      // Log inventory updates for debugging
+      if (result.inventoryUpdates) {
+        console.log('Inventory updates:', result.inventoryUpdates);
+      }
+      
+      setTimeout(() => setSuccessMessage(''), 2000);
     } catch (error) {
       console.error('Error processing sale:', error);
       // Show error message to user

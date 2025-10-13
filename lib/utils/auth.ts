@@ -25,7 +25,10 @@ export async function getCurrentUser() {
 }
 
 export function formatCurrency(amount: number): string {
-  return `Rs. ${amount.toFixed(2)}`;
+  return `Rs. ${amount.toLocaleString('en-US', { 
+    minimumFractionDigits: 2, 
+    maximumFractionDigits: 2 
+  })}`;
 }
 
 export function formatDate(date: string): string {
