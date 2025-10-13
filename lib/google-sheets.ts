@@ -23,7 +23,7 @@ class GoogleSheetsService {
       this.auth = new google.auth.GoogleAuth({
         credentials: {
           type: 'service_account',
-          private_key: process.env.GOOGLE_SHEETS_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+          private_key: process.env.GOOGLE_SHEETS_PRIVATE_KEY?.replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n'),
           client_email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
         },
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
