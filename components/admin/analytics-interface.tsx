@@ -6,6 +6,7 @@ import { Sale, Item } from '@/lib/types/database';
 import { formatCurrency } from '@/lib/utils/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { SimpleThemeToggle } from '@/components/simple-theme-toggle';
 import { ArrowLeft, BarChart3, TrendingUp, DollarSign, Package, CreditCard, Users, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
@@ -590,17 +591,17 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400 text-sm lg:text-base">Loading analytics...</p>
+          <p className="text-muted-foreground text-sm lg:text-base">Loading analytics...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-2 sm:p-4 lg:p-6">
+    <div className="min-h-screen bg-background p-2 sm:p-4 lg:p-6">
       {/* Header */}
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
@@ -608,90 +609,93 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
             <Button
               variant="outline"
               onClick={handleBackToSales}
-              className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700 w-full sm:w-auto"
+              className="bg-card border-border text-foreground hover:bg-accent w-full sm:w-auto"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Sales Report
             </Button>
             <div className="text-center sm:text-left">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Sales Analytics</h1>
-              <p className="text-sm text-gray-400">Logged in as: {userEmail}</p>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Sales Analytics</h1>
+              <p className="text-sm text-muted-foreground">Logged in as: {userEmail}</p>
             </div>
           </div>
-          
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
-            <Button
-              variant="outline"
-              onClick={() => {
-                console.log('🔄 Manual refresh triggered');
-                fetchData();
-              }}
-              className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700 w-full sm:w-auto"
-              disabled={isLoading}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-            <select
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="bg-gray-800 border border-gray-700 text-white rounded-md px-3 py-2 focus:border-blue-400 focus:ring-blue-400 focus:outline-none text-sm"
-            >
-              <option value="all">All Time</option>
-              <option value="today">Today</option>
-              <option value="week">Past Week</option>
-              <option value="month">This Month</option>
-            </select>
+          <div className="flex items-center gap-2">
+            <SimpleThemeToggle />
           </div>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+          <Button
+            variant="outline"
+            onClick={() => {
+              console.log('🔄 Manual refresh triggered');
+              fetchData();
+            }}
+            className="bg-card border-border text-foreground hover:bg-accent w-full sm:w-auto"
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <select
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="bg-card border border-border text-foreground rounded-md px-3 py-2 focus:border-blue-400 focus:ring-blue-400 focus:outline-none text-sm"
+          >
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">Past Week</option>
+            <option value="month">This Month</option>
+          </select>
         </div>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
-        <Card className="bg-gray-800 border-gray-700">
+        <Card className="bg-card border-border">
           <CardContent className="p-3 lg:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-xs lg:text-sm">Total Revenue</p>
-                <p className="text-lg lg:text-2xl font-bold text-green-400">{formatCurrency(kpiData.totalRevenue)}</p>
+                <p className="text-muted-foreground text-xs lg:text-sm">Total Revenue</p>
+                <p className="text-lg lg:text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(kpiData.totalRevenue)}</p>
               </div>
-              <DollarSign className="h-6 w-6 lg:h-8 lg:w-8 text-green-400" />
+              <DollarSign className="h-6 w-6 lg:h-8 lg:w-8 text-green-600 dark:text-green-400" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-800 border-gray-700">
+        <Card className="bg-card border-border">
           <CardContent className="p-3 lg:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-xs lg:text-sm">Transactions</p>
-                <p className="text-lg lg:text-2xl font-bold text-blue-400">{kpiData.totalTransactions}</p>
+                <p className="text-muted-foreground text-xs lg:text-sm">Transactions</p>
+                <p className="text-lg lg:text-2xl font-bold text-blue-600 dark:text-blue-400">{kpiData.totalTransactions}</p>
               </div>
-              <CreditCard className="h-6 w-6 lg:h-8 lg:w-8 text-blue-400" />
+              <CreditCard className="h-6 w-6 lg:h-8 lg:w-8 text-blue-600 dark:text-blue-400" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-800 border-gray-700">
+        <Card className="bg-card border-border">
           <CardContent className="p-3 lg:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-xs lg:text-sm">Avg Transaction</p>
-                <p className="text-lg lg:text-2xl font-bold text-orange-400">{formatCurrency(kpiData.avgTransaction)}</p>
+                <p className="text-muted-foreground text-xs lg:text-sm">Avg Transaction</p>
+                <p className="text-lg lg:text-2xl font-bold text-orange-600 dark:text-orange-400">{formatCurrency(kpiData.avgTransaction)}</p>
               </div>
-              <TrendingUp className="h-6 w-6 lg:h-8 lg:w-8 text-orange-400" />
+              <TrendingUp className="h-6 w-6 lg:h-8 lg:w-8 text-orange-600 dark:text-orange-400" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-800 border-gray-700">
+        <Card className="bg-card border-border">
           <CardContent className="p-3 lg:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-xs lg:text-sm">Active Cashiers</p>
-                <p className="text-lg lg:text-2xl font-bold text-purple-400">{kpiData.uniqueCashiers}</p>
+                <p className="text-muted-foreground text-xs lg:text-sm">Active Cashiers</p>
+                <p className="text-lg lg:text-2xl font-bold text-purple-600 dark:text-purple-400">{kpiData.uniqueCashiers}</p>
               </div>
-              <Users className="h-6 w-6 lg:h-8 lg:w-8 text-purple-400" />
+              <Users className="h-6 w-6 lg:h-8 lg:w-8 text-purple-600 dark:text-purple-400" />
             </div>
           </CardContent>
         </Card>
@@ -701,9 +705,9 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
       <div className="space-y-4 lg:space-y-6">
         {/* First Row - Cashier Sales & Product Quantities */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-card border-border">
             <CardHeader className="pb-3">
-              <CardTitle className="text-white flex items-center gap-2 text-base lg:text-lg">
+              <CardTitle className="text-foreground flex items-center gap-2 text-base lg:text-lg">
                 <BarChart3 className="h-4 w-4 lg:h-5 lg:w-5" />
                 Sales by Cashier
               </CardTitle>
@@ -719,9 +723,9 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-card border-border">
             <CardHeader className="pb-3">
-              <CardTitle className="text-white flex items-center gap-2 text-base lg:text-lg">
+              <CardTitle className="text-foreground flex items-center gap-2 text-base lg:text-lg">
                 <Package className="h-4 w-4 lg:h-5 lg:w-5" />
                 Products by Quantity (Top 10)
               </CardTitle>
@@ -740,9 +744,9 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
 
         {/* Second Row - Sales Trend & Payment Methods */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-card border-border">
             <CardHeader className="pb-3">
-              <CardTitle className="text-white flex items-center gap-2 text-base lg:text-lg">
+              <CardTitle className="text-foreground flex items-center gap-2 text-base lg:text-lg">
                 <TrendingUp className="h-4 w-4 lg:h-5 lg:w-5" />
                 Sales Trend Over Time
               </CardTitle>
@@ -758,9 +762,9 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-card border-border">
             <CardHeader className="pb-3">
-              <CardTitle className="text-white flex items-center gap-2 text-base lg:text-lg">
+              <CardTitle className="text-foreground flex items-center gap-2 text-base lg:text-lg">
                 <CreditCard className="h-4 w-4 lg:h-5 lg:w-5" />
                 Payment Methods Distribution
               </CardTitle>
@@ -779,9 +783,9 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
 
         {/* Third Row - Top Revenue Items */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-card border-border">
             <CardHeader className="pb-3">
-              <CardTitle className="text-white flex items-center gap-2 text-base lg:text-lg">
+              <CardTitle className="text-foreground flex items-center gap-2 text-base lg:text-lg">
                 <DollarSign className="h-4 w-4 lg:h-5 lg:w-5" />
                 Top Revenue Items
               </CardTitle>
@@ -797,15 +801,15 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-card border-border">
             <CardHeader className="pb-3">
-              <CardTitle className="text-white flex items-center gap-2 text-base lg:text-lg">
+              <CardTitle className="text-foreground flex items-center gap-2 text-base lg:text-lg">
                 <BarChart3 className="h-4 w-4 lg:h-5 lg:w-5" />
                 Additional Insights
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="h-64 lg:h-80 flex flex-col justify-center space-y-3 lg:space-y-4 text-gray-300">
+              <div className="h-64 lg:h-80 flex flex-col justify-center space-y-3 lg:space-y-4 text-muted-foreground">
                 <div className="text-center">
                   <h3 className="text-base lg:text-lg font-semibold mb-3 lg:mb-4">Quick Statistics</h3>
                   <div className="space-y-2 lg:space-y-3 text-sm lg:text-base">

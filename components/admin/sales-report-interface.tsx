@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from '@/lib/utils/auth';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { SimpleThemeToggle } from '@/components/simple-theme-toggle';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -199,24 +200,25 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
   const stats = getSalesStats();
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-gray-800 shadow-sm border-b border-gray-700 px-3 sm:px-4 lg:px-6 py-3 lg:py-4">
+      <header className="bg-card shadow-sm border-b border-border px-3 sm:px-4 lg:px-6 py-3 lg:py-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
               onClick={handleBackToAdmin}
-              className="flex items-center justify-center gap-2 bg-gray-700 text-white border-gray-600 hover:bg-gray-600 w-full sm:w-auto text-sm"
+              className="flex items-center justify-center gap-2 bg-secondary text-foreground border-border hover:bg-secondary/80 w-full sm:w-auto text-sm"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back to Dashboard</span>
             </Button>
             <div className="text-center sm:text-left">
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Sales Reports</h1>
-              <p className="text-xs text-gray-400">Logged in as: {userEmail}</p>
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground">Sales Reports</h1>
+              <p className="text-xs text-muted-foreground">Logged in as: {userEmail}</p>
             </div>
           </div>
+          <SimpleThemeToggle />
           
           <Button
             variant="outline"
@@ -233,49 +235,49 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
       <div className="p-3 sm:p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* Stats Overview */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-3 sm:p-4">
               <div className="text-center">
-                <p className="text-xs sm:text-sm text-gray-400 mb-1">Total Revenue</p>
-                <p className="text-sm sm:text-lg lg:text-xl font-bold text-green-400 truncate">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Revenue</p>
+                <p className="text-sm sm:text-lg lg:text-xl font-bold text-green-600 dark:text-green-400 truncate">
                   {formatCurrency(stats.totalRevenue)}
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-3 sm:p-4">
               <div className="text-center">
-                <p className="text-xs sm:text-sm text-gray-400 mb-1">Transactions</p>
-                <p className="text-sm sm:text-lg lg:text-xl font-bold text-blue-400">{stats.totalTransactions}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Transactions</p>
+                <p className="text-sm sm:text-lg lg:text-xl font-bold text-blue-600 dark:text-blue-400">{stats.totalTransactions}</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-3 sm:p-4">
               <div className="text-center">
-                <p className="text-xs sm:text-sm text-gray-400 mb-1">Cash Sales</p>
-                <p className="text-sm sm:text-lg lg:text-xl font-bold text-yellow-400">{stats.cashSales}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Cash Sales</p>
+                <p className="text-sm sm:text-lg lg:text-xl font-bold text-yellow-600 dark:text-yellow-400">{stats.cashSales}</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-3 sm:p-4">
               <div className="text-center">
-                <p className="text-xs sm:text-sm text-gray-400 mb-1">Transfer Sales</p>
-                <p className="text-sm sm:text-lg lg:text-xl font-bold text-purple-400">{stats.transferSales}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Transfer Sales</p>
+                <p className="text-sm sm:text-lg lg:text-xl font-bold text-purple-600 dark:text-purple-400">{stats.transferSales}</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700 col-span-2 sm:col-span-1">
+          <Card className="bg-card border-border col-span-2 sm:col-span-1">
             <CardContent className="p-3 sm:p-4">
               <div className="text-center">
-                <p className="text-xs sm:text-sm text-gray-400 mb-1">Avg. Transaction</p>
-                <p className="text-sm sm:text-lg lg:text-xl font-bold text-orange-400 truncate">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Avg. Transaction</p>
+                <p className="text-sm sm:text-lg lg:text-xl font-bold text-orange-600 dark:text-orange-400 truncate">
                   {formatCurrency(stats.averageTransaction)}
                 </p>
               </div>
@@ -284,15 +286,15 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
         </div>
 
         {/* Filters */}
-        <Card className="bg-gray-800 border-gray-700">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
             <button 
               onClick={() => setShowFilters(!showFilters)}
               className="w-full flex items-center justify-between text-left"
             >
               <div className="flex items-center gap-2">
-                <Filter className="h-5 w-5 text-white" />
-                <CardTitle className="text-white text-lg">Filters</CardTitle>
+                <Filter className="h-5 w-5 text-foreground" />
+                <CardTitle className="text-foreground text-lg">Filters</CardTitle>
               </div>
               <div className="flex items-center gap-2">
                 {(salesFilter || selectedCashier !== 'all' || dateFilter !== 'all' || startDate || endDate) && (
@@ -315,21 +317,21 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
                 {/* First row - Search and Cashier Name */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-300 block mb-2">General Search</label>
+                    <label className="text-sm font-medium text-foreground block mb-2">General Search</label>
                     <Input
                       placeholder="Search by payment method, etc..."
                       value={salesFilter}
                       onChange={(e) => setSalesFilter(e.target.value)}
-                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400"
+                      className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-blue-400 focus:ring-blue-400"
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-300 block mb-2">Cashier Name</label>
+                    <label className="text-sm font-medium text-foreground block mb-2">Cashier Name</label>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="outline"
-                          className="w-full bg-gray-700 border-gray-600 text-white hover:bg-gray-600 justify-between"
+                          className="w-full bg-background border-border text-foreground hover:bg-accent justify-between"
                         >
                           <span className="truncate">
                             {selectedCashier === 'all' 
@@ -340,19 +342,19 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
                           <ChevronDown className="h-4 w-4 opacity-50" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-full bg-gray-800 border-gray-700">
+                      <DropdownMenuContent className="w-full bg-card border-border">
                         <DropdownMenuItem 
                           onClick={() => setSelectedCashier('all')}
-                          className="text-white hover:bg-gray-700 cursor-pointer"
+                          className="text-foreground hover:bg-accent cursor-pointer"
                         >
                           All Cashiers
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-gray-600" />
+                        <DropdownMenuSeparator className="bg-border" />
                         {getUniqueCashiers().map((cashier) => (
                           <DropdownMenuItem 
                             key={cashier.id}
                             onClick={() => setSelectedCashier(cashier.id)}
-                            className="text-white hover:bg-gray-700 cursor-pointer"
+                            className="text-foreground hover:bg-accent cursor-pointer"
                           >
                             {cashier.email}
                           </DropdownMenuItem>
@@ -365,11 +367,11 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
                 {/* Second row - Time Period and Date Range */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-300 block mb-2">Time Period</label>
+                    <label className="text-sm font-medium text-foreground block mb-2">Time Period</label>
                     <select
                       value={dateFilter}
                       onChange={(e) => setDateFilter(e.target.value)}
-                      className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:border-blue-400 focus:ring-blue-400 focus:outline-none"
+                      className="w-full bg-background border border-border text-foreground rounded-md px-3 py-2 focus:border-blue-400 focus:ring-blue-400 focus:outline-none"
                     >
                       <option value="all">All Time</option>
                       <option value="today">Today</option>
@@ -378,32 +380,32 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
                     </select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-300 block mb-2">Start Date</label>
+                    <label className="text-sm font-medium text-foreground block mb-2">Start Date</label>
                     <Input
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="bg-gray-700 border-gray-600 text-white focus:border-blue-400 focus:ring-blue-400"
+                      className="bg-background border-border text-foreground focus:border-blue-400 focus:ring-blue-400"
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-300 block mb-2">End Date</label>
+                    <label className="text-sm font-medium text-foreground block mb-2">End Date</label>
                     <Input
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="bg-gray-700 border-gray-600 text-white focus:border-blue-400 focus:ring-blue-400"
+                      className="bg-background border-border text-foreground focus:border-blue-400 focus:ring-blue-400"
                     />
                   </div>
                 </div>
 
                 {/* Third row - Action buttons */}
-                <div className="flex justify-between items-center pt-2 border-t border-gray-700">
+                <div className="flex justify-between items-center pt-2 border-t border-border">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={clearFilters}
-                    className="text-gray-400 hover:text-white"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="h-4 w-4 mr-2" />
                     Clear All
@@ -412,7 +414,7 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600 px-4 py-2"
+                      className="bg-background border-border text-foreground hover:bg-accent px-4 py-2"
                       disabled={filteredSales.length === 0}
                     >
                       <Download className="h-4 w-4 mr-2" />
@@ -427,16 +429,16 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
         </Card>
 
         {/* Sales Table */}
-        <Card className="bg-gray-800 border-gray-700">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-white text-lg sm:text-xl flex items-center justify-between">
+            <CardTitle className="text-foreground text-lg sm:text-xl flex items-center justify-between">
               <span>Sales Transactions</span>
-              <span className="text-sm font-normal text-gray-400">({filteredSales.length})</span>
+              <span className="text-sm font-normal text-muted-foreground">({filteredSales.length})</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="text-center py-12 text-gray-400">
+              <div className="text-center py-12 text-muted-foreground">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-4"></div>
                 <p>Loading sales data...</p>
               </div>
@@ -446,22 +448,22 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-600">
-                        <th className="text-left p-3 text-gray-300 font-medium">Date/Time</th>
-                        <th className="text-left p-3 text-gray-300 font-medium">Cashier</th>
-                        <th className="text-left p-3 text-gray-300 font-medium">Amount</th>
-                        <th className="text-left p-3 text-gray-300 font-medium">Payment</th>
-                        <th className="text-left p-3 text-gray-300 font-medium">Items</th>
+                      <tr className="border-b border-border">
+                        <th className="text-left p-3 text-muted-foreground font-medium">Date/Time</th>
+                        <th className="text-left p-3 text-muted-foreground font-medium">Cashier</th>
+                        <th className="text-left p-3 text-muted-foreground font-medium">Amount</th>
+                        <th className="text-left p-3 text-muted-foreground font-medium">Payment</th>
+                        <th className="text-left p-3 text-muted-foreground font-medium">Items</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredSales.map((sale) => (
-                        <tr key={sale.id} className="border-b border-gray-700 hover:bg-gray-750 transition-colors">
-                          <td className="p-3 text-white text-sm">{formatDate(sale.created_at)}</td>
-                          <td className="p-3 text-gray-300 text-sm">
+                        <tr key={sale.id} className="border-b border-border hover:bg-accent/50 transition-colors">
+                          <td className="p-3 text-foreground text-sm">{formatDate(sale.created_at)}</td>
+                          <td className="p-3 text-muted-foreground text-sm">
                             {cashierEmails[sale.cashier_id] || 'Loading...'}
                           </td>
-                          <td className="p-3 font-semibold text-green-400">{formatCurrency(sale.total_amount)}</td>
+                          <td className="p-3 font-semibold text-green-600 dark:text-green-400">{formatCurrency(sale.total_amount)}</td>
                           <td className="p-3">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                               sale.payment_method === 'Cash' 
@@ -472,7 +474,7 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
                             </span>
                           </td>
                           <td className="p-3">
-                            <div className="text-xs text-gray-300 space-y-1">
+                            <div className="text-xs text-foreground space-y-1">
                               {sale.cart_details.map((item, index) => (
                                 <div key={index} className="truncate">
                                   {item.name} x{item.quantity}

@@ -65,6 +65,32 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Ensure form inputs respect theme */
+  input, textarea, select {
+    @apply bg-background text-foreground border-border;
+  }
+  
+  /* Custom POS theme variables */
+  .light {
+    --pos-bg: 248 250 252; /* gray-50 */
+    --pos-card: 255 255 255; /* white */
+    --pos-header: 241 245 249; /* gray-100 */
+    --pos-sidebar: 248 250 252; /* gray-50 */
+    --pos-border: 226 232 240; /* gray-200 */
+    --pos-text: 15 23 42; /* gray-900 */
+    --pos-text-muted: 100 116 139; /* gray-500 */
+  }
+  
+  .dark {
+    --pos-bg: 15 23 42; /* gray-900 */
+    --pos-card: 30 41 59; /* gray-800 */
+    --pos-header: 51 65 85; /* gray-700 */
+    --pos-sidebar: 30 41 59; /* gray-800 */
+    --pos-border: 51 65 85; /* gray-700 */
+    --pos-text: 248 250 252; /* gray-50 */
+    --pos-text-muted: 148 163 184; /* gray-400 */
+  }
 }
 
 @layer utilities {
@@ -98,5 +124,34 @@
   
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Custom POS theme classes */
+  .pos-bg {
+    background-color: hsl(var(--pos-bg));
+  }
+  
+  .pos-card {
+    background-color: hsl(var(--pos-card));
+  }
+  
+  .pos-header {
+    background-color: hsl(var(--pos-header));
+  }
+  
+  .pos-sidebar {
+    background-color: hsl(var(--pos-sidebar));
+  }
+  
+  .pos-border {
+    border-color: hsl(var(--pos-border));
+  }
+  
+  .pos-text {
+    color: hsl(var(--pos-text));
+  }
+  
+  .pos-text-muted {
+    color: hsl(var(--pos-text-muted));
   }
 }

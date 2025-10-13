@@ -16,7 +16,7 @@ export default async function POSPage() {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <POSInterface userId={user.id} userEmail={user.email || ''} />
     </div>
   );

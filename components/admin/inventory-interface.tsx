@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { SimpleThemeToggle } from '@/components/simple-theme-toggle';
 import { ArrowLeft, Plus, Edit, Trash2, Save, X, Package } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -133,30 +134,33 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
   };
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-gray-800 shadow-sm border-b border-gray-700 px-3 sm:px-4 lg:px-6 py-3 lg:py-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-          <Button
-            variant="outline"
-            onClick={handleBackToAdmin}
-            className="flex items-center justify-center gap-2 bg-gray-700 text-white border-gray-600 hover:bg-gray-600 w-full sm:w-auto text-sm"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to Dashboard</span>
-          </Button>
-          <div className="text-center sm:text-left">
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Inventory Management</h1>
-            <p className="text-xs text-gray-400">Logged in as: {userEmail}</p>
+      <header className="bg-card shadow-sm border-b border-border px-3 sm:px-4 lg:px-6 py-3 lg:py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            <Button
+              variant="outline"
+              onClick={handleBackToAdmin}
+              className="flex items-center justify-center gap-2 bg-secondary border-border text-foreground hover:bg-secondary/80 w-full sm:w-auto text-sm"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Dashboard</span>
+            </Button>
+            <div className="text-center sm:text-left">
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground">Inventory Management</h1>
+              <p className="text-xs text-muted-foreground">Logged in as: {userEmail}</p>
+            </div>
           </div>
+          <SimpleThemeToggle />
         </div>
       </header>
 
       <div className="p-3 sm:p-4 lg:p-6">
         {/* Item Management Section */}
-        <Card className="bg-gray-800 border-gray-700">
+        <Card className="bg-card border-border">
           <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="text-white text-lg sm:text-xl text-center sm:text-left">
+            <CardTitle className="text-foreground text-lg sm:text-xl text-center sm:text-left">
               Shop Items ({items.length})
             </CardTitle>
             <Button
@@ -170,21 +174,21 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
           <CardContent>
             {/* Add New Item Form */}
             {isAddingItem && (
-              <div className="mb-4 lg:mb-6 p-4 lg:p-6 bg-gray-700 rounded-lg border border-gray-600">
-                <h3 className="text-lg font-semibold mb-4 text-white">Add New Item</h3>
+              <div className="mb-4 lg:mb-6 p-4 lg:p-6 bg-secondary/20 rounded-lg border border-border">
+                <h3 className="text-lg font-semibold mb-4 text-foreground">Add New Item</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div>
-                    <Label htmlFor="new-name" className="text-gray-300 text-sm font-medium mb-2 block">Item Name</Label>
+                    <Label htmlFor="new-name" className="text-foreground text-sm font-medium mb-2 block">Item Name</Label>
                     <Input
                       id="new-name"
                       value={newItem.name}
                       onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
                       placeholder="Enter item name"
-                      className="bg-gray-600 border-gray-500 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400"
+                      className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-blue-400 focus:ring-blue-400"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="new-price" className="text-gray-300 text-sm font-medium mb-2 block">Price ($)</Label>
+                    <Label htmlFor="new-price" className="text-foreground text-sm font-medium mb-2 block">Price ($)</Label>
                     <Input
                       id="new-price"
                       type="number"
@@ -193,12 +197,12 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                       value={newItem.price}
                       onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
                       placeholder="0.00"
-                      className="bg-gray-600 border-gray-500 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400"
+                      className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-blue-400 focus:ring-blue-400"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="new-quantity" className="text-gray-300 text-sm font-medium mb-2 block">
-                      Total Quantity <span className="text-gray-500">(optional)</span>
+                    <Label htmlFor="new-quantity" className="text-foreground text-sm font-medium mb-2 block">
+                      Total Quantity <span className="text-muted-foreground">(optional)</span>
                     </Label>
                     <Input
                       id="new-quantity"
@@ -207,7 +211,7 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                       value={newItem.quantity}
                       onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
                       placeholder="Leave empty if unlimited"
-                      className="bg-gray-600 border-gray-500 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400"
+                      className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-blue-400 focus:ring-blue-400"
                     />
                   </div>
                 </div>
@@ -218,7 +222,7 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                       setIsAddingItem(false);
                       setNewItem({ name: '', price: '', quantity: '' });
                     }}
-                    className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 px-6 py-2 order-2 sm:order-1"
+                    className="bg-secondary border-border text-foreground hover:bg-secondary/80 px-6 py-2 order-2 sm:order-1"
                   >
                     <X className="h-4 w-4 mr-2" />
                     Cancel
@@ -238,50 +242,50 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
             {/* Items List */}
             <div className="space-y-3">
               {items.length === 0 ? (
-                <div className="text-center py-12 text-gray-400">
+                <div className="text-center py-12 text-muted-foreground">
                   <div className="mb-4">
-                    <Package className="h-12 w-12 mx-auto text-gray-500 mb-2" />
+                    <Package className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
                   </div>
                   <p className="text-lg mb-1">No items in inventory yet</p>
                   <p className="text-sm">Click "Add New Item" to get started</p>
                 </div>
               ) : (
                 items.map((item) => (
-                  <div key={item.id} className="bg-gray-700 border border-gray-600 rounded-lg overflow-hidden">
+                  <div key={item.id} className="bg-secondary/20 border border-border rounded-lg overflow-hidden">
                     {editingItem?.id === item.id ? (
                       <div className="p-4">
                         <div className="space-y-4">
                           <div>
-                            <Label className="text-gray-300 text-sm font-medium mb-2 block">Item Name</Label>
+                            <Label className="text-foreground text-sm font-medium mb-2 block">Item Name</Label>
                             <Input
                               value={editingItem.name}
                               onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
-                              className="bg-gray-600 border-gray-500 text-white focus:border-blue-400 focus:ring-blue-400"
+                              className="bg-background border-border text-foreground focus:border-blue-400 focus:ring-blue-400"
                               placeholder="Item name"
                             />
                           </div>
                           <div>
-                            <Label className="text-gray-300 text-sm font-medium mb-2 block">Price ($)</Label>
+                            <Label className="text-foreground text-sm font-medium mb-2 block">Price ($)</Label>
                             <Input
                               type="number"
                               step="0.01"
                               min="0"
                               value={editingItem.price}
                               onChange={(e) => setEditingItem({ ...editingItem, price: parseFloat(e.target.value) })}
-                              className="bg-gray-600 border-gray-500 text-white focus:border-blue-400 focus:ring-blue-400"
+                              className="bg-background border-border text-foreground focus:border-blue-400 focus:ring-blue-400"
                               placeholder="0.00"
                             />
                           </div>
                           <div>
-                            <Label className="text-gray-300 text-sm font-medium mb-2 block">
-                              Total Quantity <span className="text-gray-500">(optional)</span>
+                            <Label className="text-foreground text-sm font-medium mb-2 block">
+                              Total Quantity <span className="text-muted-foreground">(optional)</span>
                             </Label>
                             <Input
                               type="number"
                               min="0"
                               value={editingItem.quantity || ''}
                               onChange={(e) => setEditingItem({ ...editingItem, quantity: e.target.value ? parseInt(e.target.value) : undefined })}
-                              className="bg-gray-600 border-gray-500 text-white focus:border-blue-400 focus:ring-blue-400"
+                              className="bg-background border-border text-foreground focus:border-blue-400 focus:ring-blue-400"
                               placeholder="Leave empty if unlimited"
                             />
                           </div>
@@ -290,7 +294,7 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                               size="sm" 
                               variant="outline"
                               onClick={() => setEditingItem(null)} 
-                              className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 order-2 sm:order-1"
+                              className="bg-secondary border-border text-foreground hover:bg-secondary/80 order-2 sm:order-1"
                             >
                               <X className="h-4 w-4 mr-2" />
                               Cancel
@@ -311,9 +315,9 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                       <div className="p-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-white text-base truncate">{item.name}</h4>
+                            <h4 className="font-semibold text-foreground text-base truncate">{item.name}</h4>
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
-                              <p className="text-sm text-gray-300">{formatCurrency(item.price)}</p>
+                              <p className="text-sm text-muted-foreground">{formatCurrency(item.price)}</p>
                               {item.quantity !== null && item.quantity !== undefined && (
                                 <span className="text-xs bg-blue-600 text-blue-100 px-2 py-1 rounded-full w-fit">
                                   Stock: {item.quantity}
@@ -326,7 +330,7 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                               size="sm"
                               variant="outline"
                               onClick={() => setEditingItem(item)}
-                              className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 flex-1 sm:flex-none"
+                              className="bg-secondary border-border text-foreground hover:bg-secondary/80 flex-1 sm:flex-none"
                             >
                               <Edit className="h-4 w-4 sm:mr-0 mr-2" />
                               <span className="sm:hidden">Edit</span>

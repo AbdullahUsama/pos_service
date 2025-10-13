@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SimpleThemeToggle } from '@/components/simple-theme-toggle';
 import { LogOut, Package, BarChart3, Users, DollarSign, Plus, X, StickyNote, FileText, Trash2, Calendar, Clock, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -536,14 +537,14 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-gray-800 shadow-sm border-b border-gray-700 px-4 lg:px-6 py-3 lg:py-4">
+      <header className="bg-card shadow-sm border-b border-border px-4 lg:px-6 py-3 lg:py-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl lg:text-2xl font-bold text-white">Admin Dashboard</h1>
-            <p className="text-xs lg:text-sm text-gray-300">University Snack Shop Management</p>
-            <p className="text-xs text-gray-400">Logged in as: {userEmail}</p>
+            <h1 className="text-xl lg:text-2xl font-bold text-foreground">Admin Dashboard</h1>
+            <p className="text-xs lg:text-sm text-muted-foreground">University Snack Shop Management</p>
+            <p className="text-xs text-muted-foreground">Logged in as: {userEmail}</p>
           </div>
           <div className="flex gap-2">
             <Button
@@ -556,10 +557,11 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
               <Users className="h-4 w-4 mr-2" />
               Manage Cashiers
             </Button>
+            <SimpleThemeToggle />
             <Button
               variant="outline"
               onClick={handleLogout}
-              className="flex items-center gap-2 bg-gray-700 text-white border-gray-600 hover:bg-gray-600 self-start sm:self-auto"
+              className="flex items-center gap-2 self-start sm:self-auto"
             >
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline">Logout</span>
@@ -575,16 +577,16 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
           onClick={() => setShowAddUserForm(false)}
         >
           <div 
-            className="bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-700"
+            className="bg-card rounded-lg shadow-xl w-full max-w-md border border-border"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <h2 className="text-xl font-semibold text-white">Add New Cashier</h2>
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h2 className="text-xl font-semibold text-foreground">Add New Cashier</h2>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowAddUserForm(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -594,25 +596,25 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
               <form onSubmit={handleAddUser} className="space-y-4">
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="email" className="text-gray-300">Email</Label>
+                    <Label htmlFor="email" className="text-foreground">Email</Label>
                     <Input
                       id="email"
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="bg-gray-700 border-gray-600 text-white mt-1"
+                      className="mt-1"
                       required
                       placeholder="Enter cashier email"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="password" className="text-gray-300">Password</Label>
+                    <Label htmlFor="password" className="text-foreground">Password</Label>
                     <Input
                       id="password"
                       type="password"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="bg-gray-700 border-gray-600 text-white mt-1"
+                      className="mt-1"
                       required
                       minLength={6}
                       placeholder="Enter password (min 6 characters)"
@@ -632,7 +634,6 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
                     type="button"
                     variant="outline"
                     onClick={() => setShowAddUserForm(false)}
-                    className="border-gray-600 text-gray-300 hover:bg-gray-700"
                   >
                     Cancel
                   </Button>
@@ -650,11 +651,11 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
           onClick={() => setShowManageCashiers(false)}
         >
           <div 
-            className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] border border-gray-700 flex flex-col"
+            className="bg-card rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] border border-border flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <h2 className="text-xl font-semibold text-white">Manage Cashiers</h2>
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h2 className="text-xl font-semibold text-foreground">Manage Cashiers</h2>
               <div className="flex gap-2">
                 <Button
                   onClick={() => {
@@ -670,7 +671,7 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowManageCashiers(false)}
-                  className="text-gray-400 hover:text-white"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -747,11 +748,11 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
               )}
             </div>
             
-            <div className="p-6 border-t border-gray-700">
+            <div className="p-6 border-t border-border">
               <Button
                 onClick={fetchAllCashiers}
                 variant="outline"
-                className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
+                className="bg-secondary border-border text-foreground hover:bg-secondary/80"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
@@ -763,61 +764,61 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
 
       <div className="p-3 lg:p-6">{/* Success/Error Messages */}
         {message && (
-          <div className="mb-4 p-3 bg-green-800 text-green-200 rounded-lg text-sm">
+          <div className="mb-4 p-3 bg-green-900/20 text-green-600 dark:text-green-400 border border-green-600/20 rounded-lg text-sm">
             {message}
           </div>
         )}
         
         {error && (
-          <div className="mb-4 p-3 bg-red-800 text-red-200 rounded-lg text-sm">
+          <div className="mb-4 p-3 bg-red-900/20 text-red-600 dark:text-red-400 border border-red-600/20 rounded-lg text-sm">
             {error}
           </div>
         )}
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
-          <Card className="bg-gray-800 border-gray-700">
+          <Card>
             <CardContent className="p-4 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">Total Items</p>
-                  <p className="text-2xl font-bold text-slate-300">{stats.totalItems}</p>
+                  <p className="text-sm text-muted-foreground">Total Items</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.totalItems}</p>
                 </div>
-                <Package className="h-8 w-8 text-slate-400" />
+                <Package className="h-8 w-8 text-muted-foreground" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700">
+          <Card>
             <CardContent className="p-4 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">Total Sales</p>
-                  <p className="text-2xl font-bold text-emerald-300">{formatCurrency(stats.totalSales)}</p>
+                  <p className="text-sm text-muted-foreground">Total Sales</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(stats.totalSales)}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700">
+          <Card>
             <CardContent className="p-4 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">Today's Sales</p>
-                  <p className="text-2xl font-bold text-amber-300">{formatCurrency(stats.todaySales)}</p>
+                  <p className="text-sm text-muted-foreground">Today's Sales</p>
+                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{formatCurrency(stats.todaySales)}</p>
                 </div>
-                <BarChart3 className="h-8 w-8 text-amber-400" />
+                <BarChart3 className="h-8 w-8 text-orange-600 dark:text-orange-400" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700">
+          <Card>
             <CardContent className="p-4 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">Active Cashiers</p>
-                  <p className="text-2xl font-bold text-indigo-300">{stats.totalCashiers}</p>
+                  <p className="text-sm text-muted-foreground">Active Cashiers</p>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalCashiers}</p>
                 </div>
-                <Users className="h-8 w-8 text-indigo-400" />
+                <Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
               </div>
             </CardContent>
           </Card>
@@ -827,14 +828,14 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {/* Inventory Management Card */}
           <Card 
-            className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-colors cursor-pointer"
+            className="hover:bg-accent transition-colors cursor-pointer"
             onClick={navigateToInventory}
           >
             <CardContent className="text-center p-8">
               <div className="mx-auto bg-slate-600 w-16 h-16 rounded-full flex items-center justify-center mb-6">
                 <Package className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-white text-xl font-semibold mb-6">Inventory Management</h3>
+              <h3 className="text-foreground text-xl font-semibold mb-6">Inventory Management</h3>
               <Button className="bg-slate-600 hover:bg-slate-500 text-white w-full">
                 Manage Inventory
               </Button>
@@ -843,14 +844,14 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
 
           {/* Sales Report Card */}
           <Card 
-            className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-colors cursor-pointer"
+            className="bg-card border-border hover:bg-accent transition-colors cursor-pointer"
             onClick={navigateToSalesReport}
           >
             <CardContent className="text-center p-8">
               <div className="mx-auto bg-emerald-600 w-16 h-16 rounded-full flex items-center justify-center mb-6">
                 <BarChart3 className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-white text-xl font-semibold mb-6">Sales Reports</h3>
+              <h3 className="text-foreground text-xl font-semibold mb-6">Sales Reports</h3>
               <Button className="bg-emerald-600 hover:bg-emerald-500 text-white w-full">
                 View Reports
               </Button>
@@ -859,14 +860,14 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
 
           {/* Notes Management Card */}
           <Card 
-            className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-colors cursor-pointer"
+            className="bg-card border-border hover:bg-accent transition-colors cursor-pointer"
             onClick={handleViewNotes}
           >
             <CardContent className="text-center p-8">
               <div className="mx-auto bg-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mb-6">
                 <StickyNote className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-white text-xl font-semibold mb-6">View Notes</h3>
+              <h3 className="text-foreground text-xl font-semibold mb-6">View Notes</h3>
               <Button className="bg-indigo-600 hover:bg-indigo-500 text-white w-full">
                 View All Notes
               </Button>
@@ -874,12 +875,12 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
           </Card>
 
           {/* Google Sheets Card */}
-          <Card className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-colors">
+          <Card className="bg-card border-border hover:bg-accent transition-colors">
             <CardContent className="text-center p-8">
               <div className="mx-auto bg-green-600 w-16 h-16 rounded-full flex items-center justify-center mb-6">
                 <FileText className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-white text-xl font-semibold mb-4">Google Sheets</h3>
+              <h3 className="text-foreground text-xl font-semibold mb-4">Google Sheets</h3>
               <div className="flex flex-col gap-2">
                 <Button 
                   onClick={testGoogleSheetsConnection}
@@ -908,15 +909,15 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
         {/* Notes Modal */}
         {showNotesView && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] border border-gray-700 flex flex-col">
+            <div className="bg-card rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] border border-border flex flex-col">
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-700">
-                <h2 className="text-lg font-semibold text-white">All Cashier Notes</h2>
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <h2 className="text-lg font-semibold text-foreground">All Cashier Notes</h2>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowNotesView(false)}
-                  className="text-gray-400 hover:text-white"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -927,27 +928,27 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
                 {notesLoading ? (
                   <div className="text-center py-8">
                     <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-gray-400">Loading notes...</p>
+                    <p className="text-muted-foreground">Loading notes...</p>
                   </div>
                 ) : notes.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-400">No notes found</p>
-                    <p className="text-sm text-gray-500 mt-1">Cashiers haven't added any notes yet</p>
+                    <p className="text-muted-foreground">No notes found</p>
+                    <p className="text-sm text-muted-foreground/70 mt-1">Cashiers haven't added any notes yet</p>
                   </div>
                 ) : (
                   <div className="grid gap-4">
                     {notes.map((note) => (
                       <div
                         key={note.id}
-                        className="bg-gray-700 rounded-lg p-4 border border-gray-600"
+                        className="bg-secondary/50 rounded-lg p-4 border border-border"
                       >
                         {/* Note Header */}
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <h3 className="font-medium text-white text-lg">{note.title}</h3>
-                            <p className="text-sm text-gray-400">by {note.cashier_email}</p>
+                            <h3 className="font-medium text-foreground text-lg">{note.title}</h3>
+                            <p className="text-sm text-muted-foreground">by {note.cashier_email}</p>
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-gray-400">
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
                               <span>{formatDate(note.created_at)}</span>
@@ -970,10 +971,11 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
               </div>
 
               {/* Footer */}
-              <div className="flex justify-end p-4 border-t border-gray-700">
+              <div className="flex justify-end p-4 border-t border-border">
                 <Button
                   onClick={() => setShowNotesView(false)}
-                  className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600"
+                  variant="outline"
+                  className="bg-secondary border-border text-foreground hover:bg-secondary/80"
                 >
                   Close
                 </Button>

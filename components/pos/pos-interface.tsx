@@ -7,6 +7,7 @@ import { formatCurrency } from '@/lib/utils/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { SimpleThemeToggle } from '@/components/simple-theme-toggle';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,8 @@ import { LogOut, Search, Plus, Minus, Trash2, ShoppingCart, StickyNote, FileText
 import { useRouter } from 'next/navigation';
 import AddNotePopup from './add-note-popup';
 import PreviousNotesPopup from './previous-notes-popup';
+import MobileCartModal from './mobile-cart-modal';
+import FloatingCartButton from './floating-cart-button';
 
 interface POSInterfaceProps {
   userId: string;
@@ -36,6 +39,9 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
   const [showAddNote, setShowAddNote] = useState(false);
   const [showPreviousNotes, setShowPreviousNotes] = useState(false);
   const [notesLoading, setNotesLoading] = useState(false);
+  
+  // Mobile cart state
+  const [showMobileCart, setShowMobileCart] = useState(false);
   
   const router = useRouter();
   const supabase = createClient();
@@ -181,6 +187,9 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
       fetchTodaysStats(); // Refresh stats
       fetchItems(); // Refresh items to get updated quantities
       
+      // Close mobile cart modal on successful checkout
+      setShowMobileCart(false);
+      
       // Log inventory updates for debugging
       if (result.inventoryUpdates) {
         console.log('Inventory updates:', result.inventoryUpdates);
@@ -315,56 +324,57 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-gray-900">
+    <div className="flex flex-col lg:flex-row h-screen bg-background">
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-gray-800 shadow-sm border-b border-gray-700 px-4 lg:px-6 py-3 lg:py-4">
+        <header className="bg-card shadow-sm border-b border-border px-4 lg:px-6 py-3 lg:py-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-white">Khappa POS</h1>
-              <p className="text-xs text-gray-400">Logged in as: {userEmail}</p>
+              <h1 className="text-xl lg:text-2xl font-bold text-foreground">Khappa POS</h1>
+              <p className="text-xs text-muted-foreground">Logged in as: {userEmail}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2 lg:gap-4">
               <div className="text-center sm:text-right">
-                <div className="text-xs lg:text-sm text-gray-300">Today&apos;s Sales</div>
-                <div className="text-sm lg:text-lg font-semibold text-green-400">{formatCurrency(todaysStats.totalSales)}</div>
+                <div className="text-xs lg:text-sm text-muted-foreground">Today&apos;s Sales</div>
+                <div className="text-sm lg:text-lg font-semibold text-green-600 dark:text-green-400">{formatCurrency(todaysStats.totalSales)}</div>
               </div>
               <div className="text-center sm:text-right">
-                <div className="text-xs lg:text-sm text-gray-300">Items Sold</div>
-                <div className="text-sm lg:text-lg font-semibold text-blue-400">{todaysStats.itemsSold}</div>
+                <div className="text-xs lg:text-sm text-muted-foreground">Items Sold</div>
+                <div className="text-sm lg:text-lg font-semibold text-blue-600 dark:text-blue-400">{todaysStats.itemsSold}</div>
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="flex items-center gap-2 bg-gray-700 text-white border-gray-600 hover:bg-gray-600 text-xs lg:text-sm px-2 lg:px-4"
+                    className="flex items-center gap-2 text-xs lg:text-sm px-2 lg:px-4"
                   >
                     <StickyNote className="h-3 w-3 lg:h-4 lg:w-4" />
                     <span className="hidden sm:inline">Notes</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-gray-800 border-gray-700">
+                <DropdownMenuContent>
                   <DropdownMenuItem 
                     onClick={() => handleNotesDropdown('add')}
-                    className="text-white hover:bg-gray-700 cursor-pointer"
+                    className="cursor-pointer"
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     Add Note
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => handleNotesDropdown('previous')}
-                    className="text-white hover:bg-gray-700 cursor-pointer"
+                    className="cursor-pointer"
                   >
                     <Clock className="h-4 w-4 mr-2" />
                     Previous Notes
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <SimpleThemeToggle />
               <Button
                 variant="outline"
                 onClick={handleLogout}
-                className="flex items-center gap-2 bg-gray-700 text-white border-gray-600 hover:bg-gray-600 text-xs lg:text-sm px-2 lg:px-4"
+                className="flex items-center gap-2 text-xs lg:text-sm px-2 lg:px-4"
               >
                 <LogOut className="h-3 w-3 lg:h-4 lg:w-4" />
                 <span className="hidden sm:inline">Logout</span>
@@ -376,15 +386,15 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
         {/* Content */}
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           {/* Items Section */}
-          <div className="flex-1 p-3 lg:p-6 bg-gray-900 overflow-y-auto">
+          <div className="flex-1 p-3 lg:p-6 bg-background overflow-y-auto">
             <div className="mb-4 lg:mb-6">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder="Search items..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-400"
+                  className="pl-10"
                 />
               </div>
             </div>
@@ -398,16 +408,16 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
                 return (
                   <Card
                     key={item.id}
-                    className={`cursor-pointer hover:shadow-md transition-shadow border-gray-700 ${
+                    className={`cursor-pointer hover:shadow-md transition-shadow ${
                       isOutOfStock 
-                        ? 'bg-gray-800 opacity-50 cursor-not-allowed' 
-                        : 'bg-gray-800 hover:bg-gray-750'
+                        ? 'opacity-50 cursor-not-allowed' 
+                        : 'hover:bg-accent'
                     }`}
                     onClick={() => !isOutOfStock && addToCart(item)}
                   >
                     <CardContent className="p-3 lg:p-4">
-                      <h3 className="font-semibold text-sm lg:text-lg mb-1 lg:mb-2 text-white line-clamp-2">{item.name}</h3>
-                      <p className="text-lg lg:text-xl font-bold text-green-400 mb-1">
+                      <h3 className="font-semibold text-sm lg:text-lg mb-1 lg:mb-2 text-foreground line-clamp-2">{item.name}</h3>
+                      <p className="text-lg lg:text-xl font-bold text-green-600 dark:text-green-400 mb-1">
                         {formatCurrency(item.price)}
                       </p>
                       {item.quantity !== null && item.quantity !== undefined && (
@@ -433,51 +443,51 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
             </div>
           </div>
 
-          {/* Cart Section */}
-          <div className="w-full lg:w-96 bg-gray-800 shadow-lg border-t lg:border-t-0 lg:border-l border-gray-700 flex flex-col max-h-96 lg:max-h-none">
-            <div className="p-4 lg:p-6 border-b border-gray-700">
-              <h2 className="text-lg lg:text-xl font-bold flex items-center gap-2 text-white">
-                <ShoppingCart className="h-4 w-4 lg:h-5 lg:w-5" />
+          {/* Desktop Cart Section - Hidden on mobile */}
+          <div className="hidden lg:flex w-96 bg-card shadow-lg border-l border-border flex-col">
+            <div className="p-6 border-b border-border">
+              <h2 className="text-xl font-bold flex items-center gap-2 text-foreground">
+                <ShoppingCart className="h-5 w-5" />
                 Cart ({cart.length})
               </h2>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 lg:p-6">
+            <div className="flex-1 overflow-y-auto p-6">
               {cart.length === 0 ? (
-                <p className="text-gray-400 text-center text-sm lg:text-base">Cart is empty</p>
+                <p className="text-muted-foreground text-center">Cart is empty</p>
               ) : (
-                <div className="space-y-3 lg:space-y-4">
+                <div className="space-y-4">
                   {cart.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-2 lg:p-3 bg-gray-700 rounded-lg">
+                    <div key={item.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-white text-sm lg:text-base truncate">{item.name}</h4>
-                        <p className="text-xs lg:text-sm text-gray-300">{formatCurrency(item.price)} each</p>
+                        <h4 className="font-medium text-foreground truncate">{item.name}</h4>
+                        <p className="text-sm text-muted-foreground">{formatCurrency(item.price)} each</p>
                       </div>
-                      <div className="flex items-center gap-1 lg:gap-2 ml-2">
+                      <div className="flex items-center gap-2 ml-2">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
-                          className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 h-6 w-6 lg:h-8 lg:w-8 p-0"
+                          className="h-8 w-8 p-0"
                         >
-                          <Minus className="h-2 w-2 lg:h-3 lg:w-3" />
+                          <Minus className="h-3 w-3" />
                         </Button>
-                        <span className="w-6 lg:w-8 text-center text-white text-sm lg:text-base">{item.quantity}</span>
+                        <span className="w-8 text-center text-foreground">{item.quantity}</span>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
-                          className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 h-6 w-6 lg:h-8 lg:w-8 p-0"
+                          className="h-8 w-8 p-0"
                         >
-                          <Plus className="h-2 w-2 lg:h-3 lg:w-3" />
+                          <Plus className="h-3 w-3" />
                         </Button>
                         <Button
                           size="sm"
                           variant="destructive"
                           onClick={() => removeFromCart(item.id)}
-                          className="bg-red-600 hover:bg-red-700 h-6 w-6 lg:h-8 lg:w-8 p-0"
+                          className="h-8 w-8 p-0"
                         >
-                          <Trash2 className="h-2 w-2 lg:h-3 lg:w-3" />
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     </div>
@@ -486,28 +496,28 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
               )}
             </div>
 
-            {/* Success Message - Always visible when present */}
+            {/* Success Message - Desktop */}
             {successMessage && (
-              <div className="p-4 lg:p-6 border-t border-gray-700 bg-gray-750">
-                <div className="p-3 bg-green-800 text-green-200 rounded-lg text-center text-sm lg:text-base border border-green-700 animate-pulse">
+              <div className="p-6 border-t border-border">
+                <div className="p-3 bg-green-800 text-green-200 rounded-lg text-center border border-green-700 animate-pulse">
                   {successMessage}
                 </div>
               </div>
             )}
 
-            {/* Checkout Section */}
+            {/* Checkout Section - Desktop */}
             {cart.length > 0 && (
-              <div className="p-4 lg:p-6 border-t border-gray-700 bg-gray-750">
-                <div className="mb-3 lg:mb-4">
-                  <div className="flex justify-between items-center text-lg lg:text-xl font-bold text-white">
+              <div className="p-6 border-t border-border">
+                <div className="mb-4">
+                  <div className="flex justify-between items-center text-xl font-bold text-foreground">
                     <span>Total:</span>
-                    <span className="text-green-400">{formatCurrency(getTotalAmount())}</span>
+                    <span className="text-green-600 dark:text-green-400">{formatCurrency(getTotalAmount())}</span>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Button
-                    className="w-full bg-green-600 hover:bg-green-700 text-white text-sm lg:text-base py-2 lg:py-3"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white py-3"
                     size="lg"
                     onClick={() => handleCheckout('Cash')}
                     disabled={isLoading}
@@ -515,7 +525,7 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
                     {isLoading ? 'Processing...' : 'Cash Payment'}
                   </Button>
                   <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm lg:text-base py-2 lg:py-3"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
                     variant="outline"
                     size="lg"
                     onClick={() => handleCheckout('Transfer')}
@@ -529,6 +539,24 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
           </div>
         </div>
       </div>
+      
+      {/* Mobile Cart Button - Only visible on mobile */}
+      <FloatingCartButton
+        cartCount={cart.reduce((total, item) => total + item.quantity, 0)}
+        onClick={() => setShowMobileCart(true)}
+      />
+      
+      {/* Mobile Cart Modal */}
+      <MobileCartModal
+        isOpen={showMobileCart}
+        onClose={() => setShowMobileCart(false)}
+        cart={cart}
+        onUpdateQuantity={updateCartQuantity}
+        onRemoveItem={removeFromCart}
+        onCheckout={handleCheckout}
+        isLoading={isLoading}
+        successMessage={successMessage}
+      />
       
       {/* Notes Popups */}
       <AddNotePopup
