@@ -17,6 +17,7 @@ class GoogleSheetsService {
   private sheets: any;
   private spreadsheetId: string = '';
   private auth: any;
+  private timezone: string;
 
   constructor() {
     try {
@@ -31,8 +32,44 @@ class GoogleSheetsService {
       
       this.sheets = google.sheets({ version: 'v4', auth: this.auth });
       this.spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID || '';
+      
+      // Set timezone with fallback options
+      this.timezone = process.env.TIMEZONE || 'Asia/Karachi';
+      
+      console.log(`Google Sheets service initialized with timezone: ${this.timezone}`);
     } catch (error) {
       console.error('Failed to initialize Google Sheets service:', error);
+      this.timezone = 'Asia/Karachi'; // Fallback timezone
+    }
+  }
+
+  private formatTimestamp(dateString: string): string {
+    try {
+      return new Date(dateString).toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+        timeZone: this.timezone
+      });
+    } catch (error) {
+      console.error('Error formatting timestamp with timezone:', error);
+      // Fallback to manual offset calculation for Pakistan timezone (UTC+5)
+      const date = new Date(dateString);
+      const pakistanOffset = 5 * 60; // 5 hours in minutes
+      const localTime = new Date(date.getTime() + (pakistanOffset * 60 * 1000));
+      return localTime.toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
     }
   }
 
@@ -48,15 +85,7 @@ class GoogleSheetsService {
         .join(', ');
 
       const values = [[
-        new Date(saleData.created_at).toLocaleString('en-US', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: true // This will show AM/PM format
-        }),
+        this.formatTimestamp(saleData.created_at),
         saleData.id,
         saleData.cashier_email || 'Unknown',
         saleData.total_amount,
