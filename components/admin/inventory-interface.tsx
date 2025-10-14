@@ -20,7 +20,12 @@ interface InventoryInterfaceProps {
 export default function InventoryInterface({ userEmail }: InventoryInterfaceProps) {
   const [items, setItems] = useState<Item[]>([]);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
-  const [newItem, setNewItem] = useState({ name: '', price: '', quantity: '' });
+  const [newItem, setNewItem] = useState({ 
+    name: '', 
+    original_price: '', 
+    selling_price: '', 
+    quantity: '' 
+  });
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
@@ -49,14 +54,15 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
   };
 
   const handleAddItem = async () => {
-    if (!newItem.name || !newItem.price) return;
+    if (!newItem.name || !newItem.original_price || !newItem.selling_price) return;
     
     setIsLoading(true);
     
     try {
       const itemData: any = {
         name: newItem.name,
-        price: parseFloat(newItem.price)
+        original_price: parseFloat(newItem.original_price),
+        selling_price: parseFloat(newItem.selling_price)
       };
       
       // Only add quantity if user provided a value
@@ -70,7 +76,7 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
       
       if (error) throw error;
       
-      setNewItem({ name: '', price: '', quantity: '' });
+      setNewItem({ name: '', original_price: '', selling_price: '', quantity: '' });
       setIsAddingItem(false);
       fetchItems();
     } catch (error) {
@@ -88,7 +94,8 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
     try {
       const updateData: any = {
         name: editingItem.name,
-        price: editingItem.price
+        original_price: editingItem.original_price,
+        selling_price: editingItem.selling_price
       };
       
       // Handle quantity - if it's undefined, null, or empty string, set it to null in database
@@ -193,7 +200,7 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
             {isAddingItem && (
               <div className="mb-4 lg:mb-6 p-4 lg:p-6 bg-secondary/20 rounded-lg border border-border">
                 <h3 className="text-lg font-semibold mb-4 text-foreground">Add New Item</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                   <div>
                     <Label htmlFor="new-name" className="text-foreground text-sm font-medium mb-2 block">Item Name</Label>
                     <Input
@@ -205,14 +212,27 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                     />
                   </div>
                   <div>
-                    <Label htmlFor="new-price" className="text-foreground text-sm font-medium mb-2 block">Price ($)</Label>
+                    <Label htmlFor="new-original-price" className="text-foreground text-sm font-medium mb-2 block">Original Price ($)</Label>
                     <Input
-                      id="new-price"
+                      id="new-original-price"
                       type="number"
                       step="0.01"
                       min="0"
-                      value={newItem.price}
-                      onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+                      value={newItem.original_price}
+                      onChange={(e) => setNewItem({ ...newItem, original_price: e.target.value })}
+                      placeholder="0.00"
+                      className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-blue-400 focus:ring-blue-400"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="new-selling-price" className="text-foreground text-sm font-medium mb-2 block">Selling Price ($)</Label>
+                    <Input
+                      id="new-selling-price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={newItem.selling_price}
+                      onChange={(e) => setNewItem({ ...newItem, selling_price: e.target.value })}
                       placeholder="0.00"
                       className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-blue-400 focus:ring-blue-400"
                     />
@@ -237,7 +257,7 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                     variant="outline"
                     onClick={() => {
                       setIsAddingItem(false);
-                      setNewItem({ name: '', price: '', quantity: '' });
+                      setNewItem({ name: '', original_price: '', selling_price: '', quantity: '' });
                     }}
                     className="bg-secondary border-border text-foreground hover:bg-secondary/80 px-6 py-2 order-2 sm:order-1"
                   >
@@ -246,7 +266,7 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                   </Button>
                   <Button 
                     onClick={handleAddItem} 
-                    disabled={isLoading || !newItem.name || !newItem.price} 
+                    disabled={isLoading || !newItem.name || !newItem.original_price || !newItem.selling_price} 
                     className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2 order-1 sm:order-2"
                   >
                     <Save className="h-4 w-4 mr-2" />
@@ -282,13 +302,25 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                             />
                           </div>
                           <div>
-                            <Label className="text-foreground text-sm font-medium mb-2 block">Price ($)</Label>
+                            <Label className="text-foreground text-sm font-medium mb-2 block">Original Price ($)</Label>
                             <Input
                               type="number"
                               step="0.01"
                               min="0"
-                              value={editingItem.price}
-                              onChange={(e) => setEditingItem({ ...editingItem, price: parseFloat(e.target.value) })}
+                              value={editingItem.original_price || ''}
+                              onChange={(e) => setEditingItem({ ...editingItem, original_price: e.target.value ? parseFloat(e.target.value) : 0 })}
+                              className="bg-background border-border text-foreground focus:border-blue-400 focus:ring-blue-400"
+                              placeholder="0.00"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-foreground text-sm font-medium mb-2 block">Selling Price ($)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={editingItem.selling_price || ''}
+                              onChange={(e) => setEditingItem({ ...editingItem, selling_price: e.target.value ? parseFloat(e.target.value) : 0 })}
                               className="bg-background border-border text-foreground focus:border-blue-400 focus:ring-blue-400"
                               placeholder="0.00"
                             />
@@ -319,7 +351,7 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                             <Button 
                               size="sm" 
                               onClick={handleUpdateItem} 
-                              disabled={isLoading || !editingItem.name || editingItem.price <= 0} 
+                              disabled={isLoading || !editingItem.name || editingItem.original_price <= 0 || editingItem.selling_price <= 0} 
                               className="bg-green-600 hover:bg-green-700 disabled:opacity-50 order-1 sm:order-2"
                             >
                               <Save className="h-4 w-4 mr-2" />
@@ -334,7 +366,14 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-foreground text-base truncate">{item.name}</h4>
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
-                              <p className="text-sm text-muted-foreground">{formatCurrency(item.price)}</p>
+                              <div className="flex flex-wrap gap-2 text-sm">
+                                <span className="text-muted-foreground">
+                                  Original: {formatCurrency(item.original_price)}
+                                </span>
+                                <span className="text-green-600 font-medium">
+                                  Selling: {formatCurrency(item.selling_price)}
+                                </span>
+                              </div>
                               {item.quantity !== null && item.quantity !== undefined && (
                                 <span className="text-xs bg-blue-600 text-blue-100 px-2 py-1 rounded-full w-fit">
                                   Stock: {item.quantity}

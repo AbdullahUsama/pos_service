@@ -116,7 +116,12 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
             : cartItem
         );
       } else {
-        return [...prevCart, { ...item, quantity: 1 }];
+        return [...prevCart, { 
+          id: item.id, 
+          name: item.name, 
+          price: item.selling_price, // Use selling_price for the cart
+          quantity: 1 
+        }];
       }
     });
   };
@@ -487,7 +492,7 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
                     <CardContent className="p-3 lg:p-4">
                       <h3 className="font-semibold text-sm lg:text-lg mb-1 lg:mb-2 text-foreground line-clamp-2">{item.name}</h3>
                       <p className="text-lg lg:text-xl font-bold text-green-600 dark:text-green-400 mb-1">
-                        {formatCurrency(item.price)}
+                        {formatCurrency(item.selling_price)}
                       </p>
                       {item.quantity !== null && item.quantity !== undefined && (
                         <div className="flex items-center justify-between">

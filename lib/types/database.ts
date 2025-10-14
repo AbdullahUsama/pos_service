@@ -5,21 +5,24 @@ export interface Database {
         Row: {
           id: string;
           name: string;
-          price: number;
+          original_price: number;
+          selling_price: number;
           quantity?: number;
           created_at?: string;
         };
         Insert: {
           id?: string;
           name: string;
-          price: number;
+          original_price: number;
+          selling_price: number;
           quantity?: number;
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
-          price?: number;
+          original_price?: number;
+          selling_price?: number;
           quantity?: number;
           created_at?: string;
         };
@@ -103,14 +106,15 @@ export interface Database {
 export interface CartItem {
   id: string;
   name: string;
-  price: number;
+  price: number; // This will use selling_price in the frontend
   quantity: number;
 }
 
 export interface Item {
   id: string;
   name: string;
-  price: number;
+  original_price: number;
+  selling_price: number;
   quantity?: number;
   created_at?: string;
 }

@@ -24,6 +24,7 @@ interface SalesReportInterfaceProps {
 
 export default function SalesReportInterface({ userEmail }: SalesReportInterfaceProps) {
   const [sales, setSales] = useState<Sale[]>([]);
+  const [items, setItems] = useState<any[]>([]); // Add items state for profit calculation
   const [salesFilter, setSalesFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
   const [cashierEmails, setCashierEmails] = useState<Record<string, string>>({});
@@ -40,6 +41,7 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
 
   useEffect(() => {
     fetchSales();
+    fetchItems(); // Add this to fetch items for profit calculation
     
     // Subscribe to real-time sales updates
     const salesSubscription = supabase
@@ -103,6 +105,22 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
     }
   };
 
+  const fetchItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('items')
+        .select('id, name, original_price, selling_price');
+      
+      if (error) {
+        console.error('Error fetching items:', error);
+      } else {
+        setItems(data || []);
+      }
+    } catch (error) {
+      console.error('Error in fetchItems:', error);
+    }
+  };
+
   const handleBackToAdmin = () => {
     router.push('/admin');
   };
@@ -136,9 +154,12 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
     if (salesFilter) {
       filtered = filtered.filter(sale => {
         const cashierEmail = cashierEmails[sale.cashier_id] || '';
+        const itemNames = sale.cart_details.map(item => item.name.toLowerCase()).join(' ');
+        
         return sale.cashier_id.includes(salesFilter) ||
                cashierEmail.toLowerCase().includes(salesFilter.toLowerCase()) ||
-               sale.payment_method.toLowerCase().includes(salesFilter.toLowerCase());
+               sale.payment_method.toLowerCase().includes(salesFilter.toLowerCase()) ||
+               itemNames.includes(salesFilter.toLowerCase());
       });
     }
 
@@ -197,11 +218,33 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
     
     const todayRevenue = todaySales.reduce((sum, sale) => sum + sale.total_amount, 0);
 
+    // Calculate today's profit
+    const calculateTodayProfit = () => {
+      let totalProfit = 0;
+      
+      todaySales.forEach(sale => {
+        sale.cart_details.forEach(cartItem => {
+          // Find the corresponding item to get original_price and selling_price
+          const item = items.find(i => i.id === cartItem.id);
+          if (item) {
+            // Profit per unit = selling_price - original_price
+            const profitPerUnit = item.selling_price - item.original_price;
+            // Total profit for this item = profit per unit * quantity sold
+            totalProfit += profitPerUnit * cartItem.quantity;
+          }
+        });
+      });
+      
+      return totalProfit;
+    };
+
+    const todayProfit = calculateTodayProfit();
+
     return {
       totalRevenue,
       totalTransactions,
       todayRevenue,
-      averageTransaction: totalTransactions > 0 ? totalRevenue / totalTransactions : 0
+      todayProfit
     };
   };
 
@@ -280,9 +323,9 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
           <Card className="bg-card border-border">
             <CardContent className="p-3 sm:p-4">
               <div className="text-center">
-                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Avg. Transaction</p>
-                <p className="text-sm sm:text-lg lg:text-xl font-bold text-orange-600 dark:text-orange-400 truncate">
-                  {formatCurrency(stats.averageTransaction)}
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Today's Profit</p>
+                <p className="text-sm sm:text-lg lg:text-xl font-bold text-emerald-600 dark:text-emerald-400 truncate">
+                  {formatCurrency(stats.todayProfit)}
                 </p>
               </div>
             </CardContent>
@@ -323,7 +366,7 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
                   <div>
                     <label className="text-sm font-medium text-foreground block mb-2">General Search</label>
                     <Input
-                      placeholder="Search by payment method, etc..."
+                      placeholder="Search by payment method, items, etc..."
                       value={salesFilter}
                       onChange={(e) => setSalesFilter(e.target.value)}
                       className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-blue-400 focus:ring-blue-400"

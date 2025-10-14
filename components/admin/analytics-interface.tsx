@@ -7,7 +7,7 @@ import { formatCurrency } from '@/lib/utils/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SimpleThemeToggle } from '@/components/simple-theme-toggle';
-import { ArrowLeft, BarChart3, TrendingUp, DollarSign, Package, CreditCard, Users, RefreshCw } from 'lucide-react';
+import { ArrowLeft, BarChart3, TrendingUp, DollarSign, Package, CreditCard, Users, RefreshCw, PieChart } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   Chart as ChartJS,
@@ -486,6 +486,121 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
     };
   };
 
+  // Profit Chart Data Generators
+  const getDailyProfitTrendData = () => {
+    const filteredSales = getFilteredSales();
+    const dailyProfits: Record<string, number> = {};
+
+    filteredSales.forEach(sale => {
+      // Create a proper date object and format it consistently
+      const saleDate = new Date(sale.created_at);
+      const year = saleDate.getFullYear();
+      const month = String(saleDate.getMonth() + 1).padStart(2, '0');
+      const day = String(saleDate.getDate()).padStart(2, '0');
+      const dateKey = `${year}-${month}-${day}`;
+
+      // Calculate profit for this sale
+      let saleProfit = 0;
+      sale.cart_details.forEach(cartItem => {
+        const item = items.find(i => i.id === cartItem.id);
+        if (item && item.original_price && item.selling_price) {
+          const profitPerUnit = item.selling_price - item.original_price;
+          saleProfit += profitPerUnit * cartItem.quantity;
+        }
+      });
+
+      dailyProfits[dateKey] = (dailyProfits[dateKey] || 0) + saleProfit;
+    });
+
+    // Sort dates properly and convert to display format
+    const sortedDateKeys = Object.keys(dailyProfits).sort();
+    
+    const labels = sortedDateKeys.map(dateKey => {
+      const [year, month, day] = dateKey.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+    });
+
+    const data = sortedDateKeys.map(dateKey => dailyProfits[dateKey]);
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Daily Profit',
+          data,
+          borderColor: 'rgba(16, 185, 129, 1)',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+          pointBorderColor: 'rgba(16, 185, 129, 1)',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+        },
+      ],
+    };
+  };
+
+  const getProfitBreakdownData = () => {
+    const filteredSales = getFilteredSales();
+    const itemProfits: Record<string, number> = {};
+
+    filteredSales.forEach(sale => {
+      sale.cart_details.forEach(cartItem => {
+        const item = items.find(i => i.id === cartItem.id);
+        if (item && item.original_price && item.selling_price) {
+          const profitPerUnit = item.selling_price - item.original_price;
+          const totalProfit = profitPerUnit * cartItem.quantity;
+          itemProfits[item.name] = (itemProfits[item.name] || 0) + totalProfit;
+        }
+      });
+    });
+
+    // Sort by profit and take top 8
+    const sortedItems = Object.entries(itemProfits)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 8);
+
+    const labels = sortedItems.map(([name]) => name);
+    const data = sortedItems.map(([, profit]) => profit);
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Profit Contribution',
+          data,
+          backgroundColor: [
+            'rgba(16, 185, 129, 0.8)',   // Emerald
+            'rgba(59, 130, 246, 0.8)',   // Blue
+            'rgba(245, 158, 11, 0.8)',   // Amber
+            'rgba(239, 68, 68, 0.8)',    // Red
+            'rgba(139, 92, 246, 0.8)',   // Purple
+            'rgba(236, 72, 153, 0.8)',   // Pink
+            'rgba(6, 182, 212, 0.8)',    // Cyan
+            'rgba(34, 197, 94, 0.8)',    // Green
+          ],
+          borderColor: [
+            'rgba(16, 185, 129, 1)',     // Emerald
+            'rgba(59, 130, 246, 1)',     // Blue
+            'rgba(245, 158, 11, 1)',     // Amber
+            'rgba(239, 68, 68, 1)',      // Red
+            'rgba(139, 92, 246, 1)',     // Purple
+            'rgba(236, 72, 153, 1)',     // Pink
+            'rgba(6, 182, 212, 1)',      // Cyan
+            'rgba(34, 197, 94, 1)',      // Green
+          ],
+          borderWidth: 2,
+        },
+      ],
+    };
+  };
+
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -614,11 +729,112 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
     },
   };
 
+  const profitChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: {
+          color: themeColors.foreground,
+          font: {
+            size: 12,
+          },
+        },
+        position: 'top' as const,
+      },
+      tooltip: {
+        backgroundColor: themeColors.popover,
+        titleColor: themeColors.popoverForeground,
+        bodyColor: themeColors.popoverForeground,
+        borderColor: themeColors.border,
+        borderWidth: 1,
+        callbacks: {
+          label: function(context: any) {
+            return `${context.dataset.label}: ${formatCurrency(context.parsed.y || context.parsed)}`;
+          }
+        }
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: themeColors.mutedForeground,
+          font: {
+            size: 10,
+          },
+          maxRotation: 45,
+        },
+        grid: {
+          color: themeColors.border,
+        },
+      },
+      y: {
+        ticks: {
+          color: themeColors.mutedForeground,
+          font: {
+            size: 10,
+          },
+          callback: function(value: any) {
+            if (typeof value === 'number') {
+              return formatCurrency(value);
+            }
+            return value;
+          },
+        },
+        grid: {
+          color: themeColors.border,
+        },
+      },
+    },
+  };
+
+  const profitDonutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+        labels: {
+          color: themeColors.foreground,
+          padding: 10,
+          usePointStyle: true,
+          font: {
+            size: 10,
+          },
+        },
+      },
+      tooltip: {
+        backgroundColor: themeColors.popover,
+        titleColor: themeColors.popoverForeground,
+        bodyColor: themeColors.popoverForeground,
+        borderColor: themeColors.border,
+        borderWidth: 1,
+        callbacks: {
+          label: function(context: any) {
+            return `${context.label}: ${formatCurrency(context.parsed)}`;
+          }
+        }
+      },
+    },
+  };
+
   const getKPIData = () => {
     const filteredSales = getFilteredSales();
     const totalRevenue = filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0);
     const totalTransactions = filteredSales.length;
     const avgTransaction = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+    
+    // Calculate total profit
+    let totalProfit = 0;
+    filteredSales.forEach(sale => {
+      sale.cart_details.forEach(cartItem => {
+        const item = items.find(i => i.id === cartItem.id);
+        if (item && item.original_price && item.selling_price) {
+          const profitPerUnit = item.selling_price - item.original_price;
+          totalProfit += profitPerUnit * cartItem.quantity;
+        }
+      });
+    });
     
     // Count only active cashiers (exclude deleted ones)
     const activeCashierIds = [...new Set(filteredSales.map(sale => sale.cashier_id))]
@@ -631,6 +847,7 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
       totalRevenue,
       totalTransactions,
       avgTransaction,
+      totalProfit,
       uniqueCashiers: activeCashierIds.length,
     };
   };
@@ -740,10 +957,10 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
           <CardContent className="p-3 lg:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-xs lg:text-sm">Active Cashiers</p>
-                <p className="text-lg lg:text-2xl font-bold text-purple-600 dark:text-purple-400">{kpiData.uniqueCashiers}</p>
+                <p className="text-muted-foreground text-xs lg:text-sm">Total Profit</p>
+                <p className="text-lg lg:text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(kpiData.totalProfit)}</p>
               </div>
-              <Users className="h-6 w-6 lg:h-8 lg:w-8 text-purple-600 dark:text-purple-400" />
+              <TrendingUp className="h-6 w-6 lg:h-8 lg:w-8 text-emerald-600 dark:text-emerald-400" />
             </div>
           </CardContent>
         </Card>
@@ -829,7 +1046,46 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
           </Card>
         </div>
 
-        {/* Third Row - Top Revenue Items */}
+        {/* Third Row - Profit Charts */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-foreground flex items-center gap-2 text-base lg:text-lg">
+                <TrendingUp className="h-4 w-4 lg:h-5 lg:w-5" />
+                Daily Profit Trend
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="h-64 lg:h-80">
+                <Line 
+                  key={`daily-profit-trend-${chartKey}`}
+                  data={getDailyProfitTrendData()} 
+                  options={profitChartOptions} 
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-foreground flex items-center gap-2 text-base lg:text-lg">
+                <PieChart className="h-4 w-4 lg:h-5 lg:w-5" />
+                Profit Breakdown by Product
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="h-64 lg:h-80">
+                <Doughnut 
+                  key={`profit-breakdown-${chartKey}`}
+                  data={getProfitBreakdownData()} 
+                  options={profitDonutOptions} 
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Fourth Row - Top Revenue Items */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
           <Card className="bg-card border-border">
             <CardHeader className="pb-3">
@@ -876,17 +1132,15 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Best Sales Day:</span>
-                      <span className="font-bold text-xs lg:text-sm">
-                        {(() => {
-                          const dailySales: Record<string, number> = {};
-                          getFilteredSales().forEach(sale => {
-                            const date = new Date(sale.created_at).toLocaleDateString('en-US');
-                            dailySales[date] = (dailySales[date] || 0) + sale.total_amount;
-                          });
-                          const bestDay = Object.entries(dailySales).reduce((a, b) => a[1] > b[1] ? a : b, ['N/A', 0]);
-                          return bestDay[0];
-                        })()}
+                      <span>Profit Margin:</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                        {kpiData.totalRevenue > 0 ? `${((kpiData.totalProfit / kpiData.totalRevenue) * 100).toFixed(1)}%` : '0%'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Active Cashiers:</span>
+                      <span className="font-bold">
+                        {kpiData.uniqueCashiers}
                       </span>
                     </div>
                   </div>
