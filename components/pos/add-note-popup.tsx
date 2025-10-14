@@ -37,15 +37,15 @@ export default function AddNotePopup({ isOpen, onClose, onSave, isLoading }: Add
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-700">
+      <div className="bg-card rounded-lg shadow-xl w-full max-w-md border-2 border-border dark:border-[3px]">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <h2 className="text-lg font-semibold text-white">Add Shift Note</h2>
+        <div className="flex items-center justify-between p-4 border-b-2 border-border dark:border-b-[3px]">
+          <h2 className="text-lg font-semibold text-foreground">Add Shift Note</h2>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleClose}
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -54,7 +54,7 @@ export default function AddNotePopup({ isOpen, onClose, onSave, isLoading }: Add
         {/* Content */}
         <div className="p-4 space-y-4">
           <div>
-            <Label htmlFor="title" className="text-gray-300">
+            <Label htmlFor="title" className="text-foreground">
               Title
             </Label>
             <Input
@@ -62,13 +62,13 @@ export default function AddNotePopup({ isOpen, onClose, onSave, isLoading }: Add
               placeholder="e.g., Inventory, Logistics, Keys Location, etc."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+              className="mt-1"
               maxLength={100}
             />
           </div>
 
           <div>
-            <Label htmlFor="content" className="text-gray-300">
+            <Label htmlFor="content" className="text-foreground">
               Content
             </Label>
             <textarea
@@ -76,26 +76,26 @@ export default function AddNotePopup({ isOpen, onClose, onSave, isLoading }: Add
               placeholder="Enter your shift note here..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="mt-1 w-full h-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full h-32 px-3 py-2 bg-background border-2 border-border dark:border-[3px] rounded-md text-foreground placeholder-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-ring"
               rows={4}
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 p-4 border-t border-gray-700">
+        <div className="flex justify-end gap-2 p-4 border-t-2 border-border dark:border-t-[3px]">
           <Button
             variant="outline"
             onClick={handleClose}
             disabled={isLoading}
-            className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600"
+            className="border-2 dark:border-[3px]"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             disabled={isLoading || !title.trim() || !content.trim()}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white border-2 dark:border-[3px] border-blue-600"
           >
             {isLoading ? 'Saving...' : 'Save Note'}
           </Button>

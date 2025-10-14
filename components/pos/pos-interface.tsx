@@ -328,57 +328,124 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-card shadow-sm border-b border-border px-4 lg:px-6 py-3 lg:py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-foreground">Khappa POS</h1>
-              <p className="text-xs text-muted-foreground">Logged in as: {userEmail}</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 lg:gap-4">
-              <div className="text-center sm:text-right">
-                <div className="text-xs lg:text-sm text-muted-foreground">Today&apos;s Sales</div>
-                <div className="text-sm lg:text-lg font-semibold text-green-600 dark:text-green-400">{formatCurrency(todaysStats.totalSales)}</div>
+        <header className="bg-card shadow-sm border-b-2 border-border dark:border-b-[3px] px-4 lg:px-6 py-3 lg:py-4">
+          <div className="flex flex-col gap-3">
+            {/* Title and user info */}
+            <div className="lg:flex lg:items-center lg:justify-between">
+              <div>
+                <h1 className="text-xl lg:text-2xl font-bold text-foreground">Khappa POS</h1>
+                <p className="text-xs text-muted-foreground">Logged in as: {userEmail}</p>
               </div>
-              <div className="text-center sm:text-right">
-                <div className="text-xs lg:text-sm text-muted-foreground">Items Sold</div>
-                <div className="text-sm lg:text-lg font-semibold text-blue-600 dark:text-blue-400">{todaysStats.itemsSold}</div>
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+              
+              {/* Desktop-only: Stats and buttons on same row as title */}
+              <div className="hidden lg:flex lg:items-center gap-6">
+                {/* Sales stats */}
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <div className="text-sm text-muted-foreground">Today&apos;s Sales</div>
+                    <div className="text-lg font-semibold text-green-600 dark:text-green-400">{formatCurrency(todaysStats.totalSales)}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-muted-foreground">Items Sold</div>
+                    <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">{todaysStats.itemsSold}</div>
+                  </div>
+                </div>
+                
+                {/* Action buttons */}
+                <div className="flex items-center gap-4">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="flex items-center gap-2 text-sm px-4 border-2 dark:border-[3px]"
+                      >
+                        <StickyNote className="h-4 w-4" />
+                        <span>Notes</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem 
+                        onClick={() => handleNotesDropdown('add')}
+                        className="cursor-pointer"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Add Note
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleNotesDropdown('previous')}
+                        className="cursor-pointer"
+                      >
+                        <Clock className="h-4 w-4 mr-2" />
+                        Previous Notes
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <SimpleThemeToggle />
                   <Button
                     variant="outline"
-                    className="flex items-center gap-2 text-xs lg:text-sm px-2 lg:px-4"
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-sm px-4 border-2 dark:border-[3px]"
                   >
-                    <StickyNote className="h-3 w-3 lg:h-4 lg:w-4" />
-                    <span className="hidden sm:inline">Notes</span>
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem 
-                    onClick={() => handleNotesDropdown('add')}
-                    className="cursor-pointer"
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Add Note
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => handleNotesDropdown('previous')}
-                    className="cursor-pointer"
-                  >
-                    <Clock className="h-4 w-4 mr-2" />
-                    Previous Notes
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <SimpleThemeToggle />
-              <Button
-                variant="outline"
-                onClick={handleLogout}
-                className="flex items-center gap-2 text-xs lg:text-sm px-2 lg:px-4"
-              >
-                <LogOut className="h-3 w-3 lg:h-4 lg:w-4" />
-                <span className="hidden sm:inline">Logout</span>
-              </Button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Mobile-only: Stats and buttons on separate row */}
+            <div className="flex items-center justify-between gap-4 lg:hidden">
+              {/* Sales stats - left side */}
+              <div className="flex items-center gap-4">
+                <div className="text-center sm:text-left">
+                  <div className="text-xs text-muted-foreground">Today&apos;s Sales</div>
+                  <div className="text-sm font-semibold text-green-600 dark:text-green-400">{formatCurrency(todaysStats.totalSales)}</div>
+                </div>
+                <div className="text-center sm:text-left">
+                  <div className="text-xs text-muted-foreground">Items Sold</div>
+                  <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">{todaysStats.itemsSold}</div>
+                </div>
+              </div>
+              
+              {/* Action buttons - right side */}
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="flex items-center gap-2 text-xs px-2 border-2 dark:border-[3px]"
+                    >
+                      <StickyNote className="h-3 w-3" />
+                      <span className="hidden sm:inline">Notes</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem 
+                      onClick={() => handleNotesDropdown('add')}
+                      className="cursor-pointer"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Add Note
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleNotesDropdown('previous')}
+                      className="cursor-pointer"
+                    >
+                      <Clock className="h-4 w-4 mr-2" />
+                      Previous Notes
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <SimpleThemeToggle />
+                <Button
+                  variant="outline"
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-xs px-2 border-2 dark:border-[3px]"
+                >
+                  <LogOut className="h-3 w-3" />
+                  <span className="hidden sm:inline">Logout</span>
+                </Button>
+              </div>
             </div>
           </div>
         </header>
@@ -444,8 +511,8 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
           </div>
 
           {/* Desktop Cart Section - Hidden on mobile */}
-          <div className="hidden lg:flex w-96 bg-card shadow-lg border-l border-border flex-col">
-            <div className="p-6 border-b border-border">
+          <div className="hidden lg:flex w-96 bg-card shadow-lg border-l-2 border-border dark:border-l-[3px] flex-col">
+            <div className="p-6 border-b-2 border-border dark:border-b-[3px]">
               <h2 className="text-xl font-bold flex items-center gap-2 text-foreground">
                 <ShoppingCart className="h-5 w-5" />
                 Cart ({cart.length})
@@ -458,7 +525,7 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
               ) : (
                 <div className="space-y-4">
                   {cart.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <div key={item.id} className="flex items-center justify-between p-3 bg-muted rounded-lg border border-border dark:border-2">
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-foreground truncate">{item.name}</h4>
                         <p className="text-sm text-muted-foreground">{formatCurrency(item.price)} each</p>
@@ -498,8 +565,8 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
 
             {/* Success Message - Desktop */}
             {successMessage && (
-              <div className="p-6 border-t border-border">
-                <div className="p-3 bg-green-800 text-green-200 rounded-lg text-center border border-green-700 animate-pulse">
+              <div className="p-6 border-t-2 border-border dark:border-t-[3px]">
+                <div className="p-3 bg-green-800 text-green-200 rounded-lg text-center border-2 border-green-700 animate-pulse">
                   {successMessage}
                 </div>
               </div>
@@ -507,7 +574,7 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
 
             {/* Checkout Section - Desktop */}
             {cart.length > 0 && (
-              <div className="p-6 border-t border-border">
+              <div className="p-6 border-t-2 border-border dark:border-t-[3px]">
                 <div className="mb-4">
                   <div className="flex justify-between items-center text-xl font-bold text-foreground">
                     <span>Total:</span>

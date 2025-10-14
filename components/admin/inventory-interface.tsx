@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { SimpleThemeToggle } from '@/components/simple-theme-toggle';
 import { ArrowLeft, Plus, Edit, Trash2, Save, X, Package } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import DeleteConfirmationPopup from './delete-confirmation-popup';
 
 interface InventoryInterfaceProps {
   userEmail: string;
@@ -22,6 +23,11 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
   const [newItem, setNewItem] = useState({ name: '', price: '', quantity: '' });
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    itemId: string;
+    itemName: string;
+  }>({ isOpen: false, itemId: '', itemName: '' });
   const router = useRouter();
   const supabase = createClient();
 
@@ -108,25 +114,36 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
     }
   };
 
-  const handleDeleteItem = async (itemId: string) => {
-    if (!confirm('Are you sure you want to delete this item?')) return;
-    
+  const handleDeleteItem = async (itemId: string, itemName: string) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      itemId,
+      itemName
+    });
+  };
+
+  const confirmDeleteItem = async () => {
     setIsLoading(true);
     
     try {
       const { error } = await supabase
         .from('items')
         .delete()
-        .eq('id', itemId);
+        .eq('id', deleteConfirmation.itemId);
       
       if (error) throw error;
       
       fetchItems();
+      setDeleteConfirmation({ isOpen: false, itemId: '', itemName: '' });
     } catch (error) {
       console.error('Error deleting item:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const cancelDeleteItem = () => {
+    setDeleteConfirmation({ isOpen: false, itemId: '', itemName: '' });
   };
 
   const handleBackToAdmin = () => {
@@ -338,7 +355,7 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
                             <Button
                               size="sm"
                               variant="destructive"
-                              onClick={() => handleDeleteItem(item.id)}
+                              onClick={() => handleDeleteItem(item.id, item.name)}
                               disabled={isLoading}
                               className="bg-red-600 hover:bg-red-700 disabled:opacity-50 flex-1 sm:flex-none"
                             >
@@ -356,6 +373,15 @@ export default function InventoryInterface({ userEmail }: InventoryInterfaceProp
           </CardContent>
         </Card>
       </div>
+      
+      {/* Delete Confirmation Popup */}
+      <DeleteConfirmationPopup
+        isOpen={deleteConfirmation.isOpen}
+        onClose={cancelDeleteItem}
+        onConfirm={confirmDeleteItem}
+        itemName={deleteConfirmation.itemName}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

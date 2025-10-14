@@ -52,15 +52,15 @@ export default function PreviousNotesPopup({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] border border-gray-700 flex flex-col">
+      <div className="bg-card rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] border-2 border-border dark:border-[3px] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <h2 className="text-lg font-semibold text-white">Previous Notes</h2>
+        <div className="flex items-center justify-between p-4 border-b-2 border-border dark:border-b-[3px]">
+          <h2 className="text-lg font-semibold text-foreground">Previous Notes</h2>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -70,25 +70,25 @@ export default function PreviousNotesPopup({
         <div className="flex-1 overflow-y-auto p-4">
           {notes.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-400">No notes found</p>
-              <p className="text-sm text-gray-500 mt-1">Start adding notes to keep track of your shift information</p>
+              <p className="text-muted-foreground">No notes found</p>
+              <p className="text-sm text-muted-foreground mt-1">Start adding notes to keep track of your shift information</p>
             </div>
           ) : (
             <div className="grid gap-4">
               {notes.map((note) => (
                 <div
                   key={note.id}
-                  className="bg-gray-700 rounded-lg p-4 border border-gray-600 hover:border-gray-500 transition-colors"
+                  className="bg-muted rounded-lg p-4 border-2 border-border dark:border-[3px] hover:border-accent-foreground transition-colors"
                 >
                   {/* Note Header */}
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-medium text-white text-lg">{note.title}</h3>
+                    <h3 className="font-medium text-foreground text-lg">{note.title}</h3>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDelete(note.id)}
                       disabled={deletingId === note.id || isLoading}
-                      className="text-red-400 hover:text-red-300 hover:bg-red-900/20 ml-2"
+                      className="text-red-600 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 ml-2"
                     >
                       {deletingId === note.id ? (
                         <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
@@ -100,11 +100,11 @@ export default function PreviousNotesPopup({
 
                   {/* Note Content */}
                   <div className="mb-3">
-                    <p className="text-gray-300 whitespace-pre-wrap">{note.content}</p>
+                    <p className="text-foreground whitespace-pre-wrap">{note.content}</p>
                   </div>
 
                   {/* Note Footer */}
-                  <div className="flex items-center gap-4 text-sm text-gray-400">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
                       <span>{formatDate(note.created_at)}</span>
@@ -121,10 +121,11 @@ export default function PreviousNotesPopup({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end p-4 border-t border-gray-700">
+        <div className="flex justify-end p-4 border-t-2 border-border dark:border-t-[3px]">
           <Button
             onClick={onClose}
-            className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600"
+            variant="outline"
+            className="border-2 dark:border-[3px]"
           >
             Close
           </Button>

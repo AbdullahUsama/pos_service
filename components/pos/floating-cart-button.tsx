@@ -12,7 +12,7 @@ export default function FloatingCartButton({ cartCount, onClick }: FloatingCartB
   return (
     <Button
       onClick={onClick}
-      className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-card hover:bg-accent text-foreground shadow-lg hover:shadow-xl transition-all duration-200 z-40 lg:hidden flex items-center justify-center border border-border backdrop-blur-sm"
+      className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-card hover:bg-accent text-foreground shadow-lg hover:shadow-xl transition-all duration-200 z-40 lg:hidden flex items-center justify-center border-2 border-border dark:border-[3px] backdrop-blur-sm"
       size="lg"
     >
       <div className="relative">

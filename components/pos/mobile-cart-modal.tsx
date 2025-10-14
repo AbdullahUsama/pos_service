@@ -36,7 +36,7 @@ export default function MobileCartModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
       <div className="bg-card w-full max-h-[85vh] rounded-t-lg shadow-lg flex flex-col animate-in slide-in-from-bottom duration-300">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between p-4 border-b-2 border-border dark:border-b-[3px]">
           <h2 className="text-lg font-bold flex items-center gap-2 text-foreground">
             <ShoppingCart className="h-5 w-5" />
             Cart ({cart.length})
@@ -61,7 +61,7 @@ export default function MobileCartModal({
           ) : (
             <div className="space-y-3">
               {cart.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div key={item.id} className="flex items-center justify-between p-3 bg-muted rounded-lg border border-border dark:border-2">
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-foreground text-sm truncate">{item.name}</h4>
                     <p className="text-xs text-muted-foreground">{formatCurrency(item.price)} each</p>
@@ -104,8 +104,8 @@ export default function MobileCartModal({
 
         {/* Success Message */}
         {successMessage && (
-          <div className="p-4 border-t border-border">
-            <div className="p-3 bg-green-800 text-green-200 rounded-lg text-center text-sm border border-green-700 animate-pulse">
+          <div className="p-4 border-t-2 border-border dark:border-t-[3px]">
+            <div className="p-3 bg-green-800 text-green-200 rounded-lg text-center text-sm border-2 border-green-700 animate-pulse">
               {successMessage}
             </div>
           </div>
@@ -113,7 +113,7 @@ export default function MobileCartModal({
 
         {/* Checkout Section */}
         {cart.length > 0 && (
-          <div className="p-4 border-t border-border">
+          <div className="p-4 border-t-2 border-border dark:border-t-[3px]">
             <div className="mb-4">
               <div className="flex justify-between items-center text-xl font-bold text-foreground">
                 <span>Total:</span>

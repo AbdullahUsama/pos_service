@@ -47,7 +47,7 @@
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
+    --border: 0 0% 25%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
     --chart-1: 220 70% 50%;
@@ -87,7 +87,7 @@
     --pos-card: 30 41 59; /* gray-800 */
     --pos-header: 51 65 85; /* gray-700 */
     --pos-sidebar: 30 41 59; /* gray-800 */
-    --pos-border: 51 65 85; /* gray-700 */
+    --pos-border: 71 85 105; /* gray-600 - lighter for better visibility */
     --pos-text: 248 250 252; /* gray-50 */
     --pos-text-muted: 148 163 184; /* gray-400 */
   }
@@ -153,5 +153,32 @@
   
   .pos-text-muted {
     color: hsl(var(--pos-text-muted));
+  }
+  
+  /* Enhanced borders for dark mode visibility */
+  .dark .border {
+    border-width: 1.5px;
+  }
+  
+  .dark .border-b {
+    border-bottom-width: 1.5px;
+  }
+  
+  .dark .border-l {
+    border-left-width: 1.5px;
+  }
+  
+  .dark .border-t {
+    border-top-width: 1.5px;
+  }
+  
+  .dark .border-r {
+    border-right-width: 1.5px;
+  }
+  
+  /* Special styling for POS cards in dark mode */
+  .dark .pos-card-border {
+    border-width: 2px;
+    border-color: hsl(var(--pos-border));
   }
 }

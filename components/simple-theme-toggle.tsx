@@ -26,21 +26,21 @@ const SimpleThemeToggle = () => {
 
   return (
     <Button 
-      variant="ghost" 
+      variant="outline" 
       size="sm" 
       onClick={toggleTheme}
-      className="h-8 w-8 p-0"
+      className="h-8 w-8 p-0 border-2 dark:border-[3px]"
       aria-label="Toggle theme"
     >
       {theme === "dark" ? (
         <Sun
           size={ICON_SIZE}
-          className="text-muted-foreground"
+          className="text-foreground"
         />
       ) : (
         <Moon
           size={ICON_SIZE}
-          className="text-muted-foreground"
+          className="text-foreground"
         />
       )}
     </Button>
