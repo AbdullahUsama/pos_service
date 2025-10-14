@@ -688,7 +688,7 @@ export default function AnalyticsInterface({ userEmail }: AnalyticsInterfaceProp
           <select
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="bg-card border border-border text-foreground rounded-md px-3 py-2 focus:border-blue-400 focus:ring-blue-400 focus:outline-none text-sm"
+            className="bg-background border-2 border-border text-foreground rounded-md px-3 py-2 focus:border-blue-400 focus:ring-blue-400 focus:outline-none text-sm hover:bg-accent transition-colors"
           >
             <option value="all">All Time</option>
             <option value="today">Today</option>

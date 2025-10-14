@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SimpleThemeToggle } from '@/components/simple-theme-toggle';
-import { LogOut, Package, BarChart3, Users, DollarSign, Plus, X, StickyNote, FileText, Trash2, Calendar, Clock, RefreshCw } from 'lucide-react';
+import { LogOut, Package, BarChart3, Users, DollarSign, Plus, X, StickyNote, FileText, Trash2, Calendar, Clock, RefreshCw, HelpCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface AdminInterfaceProps {
@@ -17,12 +17,6 @@ interface AdminInterfaceProps {
 }
 
 export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
-  const [stats, setStats] = useState({
-    totalItems: 0,
-    totalSales: 0,
-    todaySales: 0,
-    totalCashiers: 0
-  });
   const [showAddUserForm, setShowAddUserForm] = useState(false);
   const [showManageCashiers, setShowManageCashiers] = useState(false);
   const [cashiers, setCashiers] = useState<any[]>([]);
@@ -53,12 +47,11 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
     initializing: false
   });
   
+  // Google Sheets help popup state
+  const [showSheetsHelp, setShowSheetsHelp] = useState(false);
+  
   const router = useRouter();
   const supabase = createClient();
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
 
   // Handle escape key to close modals
   useEffect(() => {
@@ -84,46 +77,6 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
       document.body.style.overflow = 'unset';
     };
   }, [showAddUserForm, showManageCashiers]);
-
-  const fetchStats = async () => {
-    try {
-      // Fetch total items
-      const { count: itemCount } = await supabase
-        .from('items')
-        .select('*', { count: 'exact', head: true });
-
-      // Fetch total sales
-      const { data: salesData } = await supabase
-        .from('sales')
-        .select('total_amount');
-
-      // Fetch today's sales
-      const today = new Date().toISOString().split('T')[0];
-      const { data: todaysSalesData } = await supabase
-        .from('sales')
-        .select('total_amount')
-        .gte('created_at', `${today}T00:00:00`)
-        .lt('created_at', `${today}T23:59:59`);
-
-      // Fetch unique cashiers
-      const { data: cashierData } = await supabase
-        .from('sales')
-        .select('cashier_id');
-
-      const uniqueCashiers = new Set(cashierData?.map(sale => sale.cashier_id) || []).size;
-      const totalSales = salesData?.reduce((sum, sale) => sum + sale.total_amount, 0) || 0;
-      const todaySales = todaysSalesData?.reduce((sum, sale) => sum + sale.total_amount, 0) || 0;
-
-      setStats({
-        totalItems: itemCount || 0,
-        totalSales,
-        todaySales,
-        totalCashiers: uniqueCashiers
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -155,7 +108,6 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
         setMessage(`✅ Cashier created successfully! Email: ${data.user.email}`);
         setFormData({ email: '', password: '' });
         setShowAddUserForm(false);
-        fetchStats(); // Refresh stats to update cashier count
         
         // Clear message after 3 seconds
         setTimeout(() => setMessage(''), 3000);
@@ -321,7 +273,6 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
       if (result.success) {
         setMessage(`Cashier ${email} deleted successfully. ${result.sales_records_preserved} sales records preserved.`);
         fetchAllCashiers(); // Refresh list
-        fetchStats(); // Refresh stats
         setTimeout(() => setMessage(''), 5000);
       } else {
         setError(result.error || 'Failed to delete cashier');
@@ -357,7 +308,6 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
       if (result.success) {
         setMessage(`Cashier ${email} restored successfully.`);
         fetchAllCashiers(); // Refresh list
-        fetchStats(); // Refresh stats
         setTimeout(() => setMessage(''), 5000);
       } else {
         setError(result.error || 'Failed to restore cashier');
@@ -774,56 +724,7 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
             {error}
           </div>
         )}
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Items</p>
-                  <p className="text-2xl font-bold text-foreground">{stats.totalItems}</p>
-                </div>
-                <Package className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Sales</p>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(stats.totalSales)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Today's Sales</p>
-                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{formatCurrency(stats.todaySales)}</p>
-                </div>
-                <BarChart3 className="h-8 w-8 text-orange-600 dark:text-orange-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Active Cashiers</p>
-                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalCashiers}</p>
-                </div>
-                <Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
+        
         {/* Main Action Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {/* Inventory Management Card */}
@@ -875,26 +776,48 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
           </Card>
 
           {/* Google Sheets Card */}
-          <Card className="bg-card border-border hover:bg-accent transition-colors">
+          <Card className="bg-card border-border hover: relative">
             <CardContent className="text-center p-8">
+              {/* Help icon */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSheetsHelp(true)}
+                className="absolute top-2 right-2 h-10 w-10 p-0 text-muted-foreground hover:text-foreground"
+              >
+                <HelpCircle className="h-8 w-8" />
+              </Button>
+              
               <div className="mx-auto bg-green-600 w-16 h-16 rounded-full flex items-center justify-center mb-6">
                 <FileText className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-foreground text-xl font-semibold mb-4">Google Sheets</h3>
-              <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
                 <Button 
                   onClick={testGoogleSheetsConnection}
                   disabled={sheetsStatus.testing}
-                  className="bg-green-600 hover:bg-green-500 text-white w-full text-sm"
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-xs border-2"
                 >
-                  {sheetsStatus.testing ? 'Testing...' : 'Test Connection'}
+                  {sheetsStatus.testing ? 'Testing...' : 'Test'}
                 </Button>
                 <Button 
                   onClick={initializeGoogleSheets}
                   disabled={sheetsStatus.initializing}
-                  className="bg-blue-600 hover:bg-blue-500 text-white w-full text-sm"
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-xs border-2"
                 >
-                  {sheetsStatus.initializing ? 'Initializing...' : 'Initialize Sheet'}
+                  {sheetsStatus.initializing ? 'Init...' : 'Init'}
+                </Button>
+                <Button 
+                  onClick={() => window.open('https://docs.google.com/spreadsheets/d/15kAuxflCA5SRaWJwxvCdi-QkbC-YvyO-QAIyqHT2tYE/edit?usp=sharing', '_blank')}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-xs border-2"
+                >
+                  Open
                 </Button>
               </div>
               {sheetsStatus.message && (
@@ -978,6 +901,60 @@ export default function AdminInterface({ userEmail }: AdminInterfaceProps) {
                   className="bg-secondary border-border text-foreground hover:bg-secondary/80"
                 >
                   Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Google Sheets Help Modal */}
+        {showSheetsHelp && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowSheetsHelp(false)}
+          >
+            <div 
+              className="bg-card rounded-lg shadow-xl w-full max-w-lg border border-border"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Google Sheets Help
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSheetsHelp(false)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="bg-green-600 text-white px-2 py-1 rounded text-xs font-medium">Test</div>
+                  <p className="text-sm text-foreground">Checks if the Google Sheets API connection is working properly</p>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium">Init</div>
+                  <p className="text-sm text-foreground">Sets up the Google Sheet with proper headers and formatting</p>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="bg-orange-600 text-white px-2 py-1 rounded text-xs font-medium">Open</div>
+                  <p className="text-sm text-foreground">Opens the Google Sheets document in a new browser tab</p>
+                </div>
+              </div>
+              
+              <div className="p-4 border-t border-border">
+                <Button
+                  onClick={() => setShowSheetsHelp(false)}
+                  className="w-full bg-secondary text-foreground hover:bg-secondary/80"
+                >
+                  Got it!
                 </Button>
               </div>
             </div>

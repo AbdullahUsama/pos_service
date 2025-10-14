@@ -67,14 +67,16 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
   };
 
   const fetchTodaysStats = async () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
     
     const { data, error } = await supabase
       .from('sales')
       .select('total_amount, cart_details')
       .eq('cashier_id', userId)
-      .gte('created_at', `${today}T00:00:00`)
-      .lt('created_at', `${today}T23:59:59`);
+      .gte('created_at', startOfDay)
+      .lt('created_at', endOfDay);
     
     if (error) {
       console.error('Error fetching stats:', error);

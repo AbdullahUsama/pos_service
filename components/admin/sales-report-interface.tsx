@@ -184,14 +184,23 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
     const filteredSales = getFilteredSales();
     const totalRevenue = filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0);
     const totalTransactions = filteredSales.length;
-    const cashSales = filteredSales.filter(sale => sale.payment_method === 'Cash').length;
-    const transferSales = filteredSales.filter(sale => sale.payment_method === 'Transfer').length;
+    
+    // Calculate today's sales using client-side filtering
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
+    
+    const todaySales = sales.filter(sale => {
+      const saleDate = new Date(sale.created_at);
+      return saleDate >= todayStart && saleDate <= todayEnd;
+    });
+    
+    const todayRevenue = todaySales.reduce((sum, sale) => sum + sale.total_amount, 0);
 
     return {
       totalRevenue,
       totalTransactions,
-      cashSales,
-      transferSales,
+      todayRevenue,
       averageTransaction: totalTransactions > 0 ? totalRevenue / totalTransactions : 0
     };
   };
@@ -218,23 +227,25 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
               <p className="text-xs text-muted-foreground">Logged in as: {userEmail}</p>
             </div>
           </div>
-          <SimpleThemeToggle />
           
-          <Button
-            variant="outline"
-            onClick={handleViewAnalytics}
-            className="bg-slate-600 border-slate-500 text-white hover:bg-slate-500 px-4 py-2 text-sm"
-          >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">View Analytics</span>
-            <span className="sm:hidden">Analytics</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleViewAnalytics}
+              className="bg-slate-600 border-slate-500 text-white hover:bg-slate-500 px-4 py-2 text-sm"
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">View Analytics</span>
+              <span className="sm:hidden">Analytics</span>
+            </Button>
+            <SimpleThemeToggle />
+          </div>
         </div>
       </header>
 
       <div className="p-3 sm:p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Card className="bg-card border-border">
             <CardContent className="p-3 sm:p-4">
               <div className="text-center">
@@ -258,22 +269,15 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
           <Card className="bg-card border-border">
             <CardContent className="p-3 sm:p-4">
               <div className="text-center">
-                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Cash Sales</p>
-                <p className="text-sm sm:text-lg lg:text-xl font-bold text-yellow-600 dark:text-yellow-400">{stats.cashSales}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Today's Sales</p>
+                <p className="text-sm sm:text-lg lg:text-xl font-bold text-indigo-600 dark:text-indigo-400 truncate">
+                  {formatCurrency(stats.todayRevenue)}
+                </p>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-card border-border">
-            <CardContent className="p-3 sm:p-4">
-              <div className="text-center">
-                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Transfer Sales</p>
-                <p className="text-sm sm:text-lg lg:text-xl font-bold text-purple-600 dark:text-purple-400">{stats.transferSales}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border col-span-2 sm:col-span-1">
             <CardContent className="p-3 sm:p-4">
               <div className="text-center">
                 <p className="text-xs sm:text-sm text-muted-foreground mb-1">Avg. Transaction</p>
@@ -402,26 +406,14 @@ export default function SalesReportInterface({ userEmail }: SalesReportInterface
                 {/* Third row - Action buttons */}
                 <div className="flex justify-between items-center pt-2 border-t border-border">
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={clearFilters}
-                    className="text-muted-foreground hover:text-foreground"
+                    className="text-red-600 dark:text-red-400 border-red-600 dark:border-red-400 hover:bg-red-600 hover:text-white dark:hover:bg-red-500 dark:hover:text-white font-medium"
                   >
                     <X className="h-4 w-4 mr-2" />
                     Clear All
                   </Button>
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="bg-background border-border text-foreground hover:bg-accent px-4 py-2"
-                      disabled={filteredSales.length === 0}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      <span className="hidden sm:inline">Export Data</span>
-                      <span className="sm:hidden">Export</span>
-                    </Button>
-                  </div>
                 </div>
               </div>
             </CardContent>
