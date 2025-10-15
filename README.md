@@ -13,7 +13,10 @@
 | **Cashier Panel** | Cashiers, Sales Staff | Fast transaction processing, product search, cart management, and payment handling (Cash/Transfer). |
 | **Admin Panel** | Managers, Owners | Inventory control, sales reporting, analytics, and user management. |
 
+### Cashier Panel (dark)
 <img width="1910" height="866" alt="image" src="https://github.com/user-attachments/assets/4e3cdd82-48d4-4145-b330-facace204192" />
+
+### Cashier Panel (light)
 <img width="1900" height="859" alt="image" src="https://github.com/user-attachments/assets/7ca5a84c-12b4-408a-844b-15838dcf7e5b" />
 
 
@@ -32,8 +35,10 @@
 
 <img width="1875" height="863" alt="image" src="https://github.com/user-attachments/assets/6fac87e7-b9ae-4604-9a5f-7262640e2ae2" />
 
+### Filtering Options
 <img width="1858" height="616" alt="image" src="https://github.com/user-attachments/assets/a20195dc-6440-4ba1-92c3-5eb6ff9ac698" />
 
+### Deep Analytics
 <img width="1870" height="757" alt="image" src="https://github.com/user-attachments/assets/31c6e21f-1645-4f5a-a90a-186910ae04bf" />
 <img width="1857" height="601" alt="image" src="https://github.com/user-attachments/assets/7892446d-25af-45ad-ab38-a1e98f9565ec" />
 
