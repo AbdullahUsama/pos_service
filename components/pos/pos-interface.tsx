@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Search, Plus, Minus, Trash2, ShoppingCart, StickyNote, FileText, Clock } from 'lucide-react';
+import { LogOut, Search, Plus, Minus, Trash2, ShoppingCart, StickyNote, FileText, Clock, BarChart3 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import AddNotePopup from './add-note-popup';
 import PreviousNotesPopup from './previous-notes-popup';
@@ -218,6 +218,10 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
     router.push('/auth/login');
   };
 
+  const handleViewAnalytics = () => {
+    router.push('/pos/analytics');
+  };
+
   // Notes functions
   const fetchNotes = async () => {
     setNotesLoading(true);
@@ -387,6 +391,14 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  <Button
+                    variant="outline"
+                    onClick={handleViewAnalytics}
+                    className="bg-slate-600 border-slate-500 text-white hover:bg-slate-500 px-4 py-2 text-sm"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    <span>View Analytics</span>
+                  </Button>
                   <SimpleThemeToggle />
                   <Button
                     variant="outline"
@@ -443,6 +455,14 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                <Button
+                  variant="outline"
+                  onClick={handleViewAnalytics}
+                  className="bg-slate-600 border-slate-500 text-white hover:bg-slate-500 px-2 py-2 text-xs"
+                >
+                  <BarChart3 className="h-3 w-3 sm:mr-2" />
+                  <span className="hidden sm:inline">Analytics</span>
+                </Button>
                 <SimpleThemeToggle />
                 <Button
                   variant="outline"
