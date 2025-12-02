@@ -74,7 +74,6 @@ export default function POSInterface({ userId, userEmail }: POSInterfaceProps) {
     const { data, error } = await supabase
       .from('sales')
       .select('total_amount, cart_details')
-      .eq('cashier_id', userId)
       .gte('created_at', startOfDay)
       .lt('created_at', endOfDay);
     
